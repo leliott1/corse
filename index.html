@@ -240,6 +240,15 @@
   }
   .nophoto-big{font-size:34px;font-weight:800;opacity:.9}
   .nophoto-txt{font-size:11px;font-weight:700;opacity:.85}
+  /* Bandeau des fiches bonus (pas de photo, juste la couleur de la catégorie) */
+  .xhero{
+    width:100%;height:96px;border-radius:18px;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--c),color-mix(in srgb,var(--c) 55%,#fff));
+    border:1px solid rgba(255,255,255,.55);
+  }
+  .xhero span{font-size:40px}
+  .xnote{font-size:11px;font-weight:600;color:#5A6B77;margin-bottom:14px;line-height:1.45}
   .credit{
     font-size:10px;font-weight:600;color:#5A6B77;
     margin:0 2px;padding:8px 0;display:inline-block;text-decoration:none;
@@ -962,64 +971,64 @@ const EXTRAS = [
 {
   cat:'Restos qui valent le détour', emoji:'🍴', hex:'#C0563F',
   items:[
-    {n:"L'Orriu / A Cantina di l'Orriu", w:'Porto-Vecchio', q:"Cantina di l'Orriu Porto-Vecchio",
+    {n:"L'Orriu / A Cantina di l'Orriu", w:'Porto-Vecchio', q:"Cantina di l'Orriu Porto-Vecchio", lat:41.5910, lng:9.2795,
      d:"L'institution de la vieille ville : cave à manger, planches de charcuterie et fromages corses, vins locaux. Réserver en été."},
-    {n:'Kissing Pigs', w:'Bonifacio', q:'Kissing Pigs Bonifacio',
+    {n:'Kissing Pigs', w:'Bonifacio', q:'Kissing Pigs Bonifacio', lat:41.3893, lng:9.1583,
      d:"Sur le quai de la marine : charcuterie, fromages et fondues. La valeur sûre après la visite de la ville haute."},
-    {n:'A Pignata', w:'Levie', q:'A Pignata Levie',
+    {n:'A Pignata', w:'Levie', q:'A Pignata Levie', lat:41.7080, lng:9.1150,
      d:"La ferme-auberge mythique de l'Alta Rocca : menu unique avec les produits de la ferme. Réservation indispensable. Parfaite après Cucuruzzu ou Bavella."},
-    {n:'Chez Marco', w:'Tizzano · 1 h 15', q:'Chez Marco Tizzano',
+    {n:'Chez Marco', w:'Tizzano · 1 h 15', q:'Chez Marco Tizzano', lat:41.5430, lng:8.8515,
      d:"La langouste les pieds dans l'eau, adresse culte de la côte ouest. C'est loin et ce n'est pas donné, mais ça se combine avec une journée Sartène-Tizzano."},
   ]
 },
 {
   cat:'Sauts, rivières et vasques', emoji:'💦', hex:'#3E8CC7',
   items:[
-    {n:'Piscines naturelles du Cavu', w:'20 min au nord', q:'Piscines naturelles du Cavu',
+    {n:'Piscines naturelles du Cavu', w:'20 min au nord', q:'Piscines naturelles du Cavu', lat:41.6790, lng:9.3080,
      d:"Vasques d'eau douce transparentes, dalles de granite, petits sauts et toboggans naturels. Parfait l'après-midi quand les plages débordent. Parking payant l'été."},
-    {n:"Piscines de l'Osu", w:'15 min', q:"piscine naturelle de l'Oso Porto-Vecchio",
+    {n:"Piscines de l'Osu", w:'15 min', q:"piscine naturelle de l'Oso Porto-Vecchio", lat:41.6250, lng:9.2780,
      d:"Le plan B tranquille : vasques et rochers lisses le long de la rivière, accès facile et gratuit. Eau plus fraîche que la mer."},
-    {n:'Cascades de Polischellu', w:'route de Bavella', q:'cascades de Polischellu Bavella',
+    {n:'Cascades de Polischellu', w:'route de Bavella', q:'cascades de Polischellu Bavella', lat:41.7855, lng:9.2465,
      d:"Enchaînement de vasques et de petits sauts en accès libre le long de la D268. Ambiance canyon sans guide — prudence, ça glisse."},
-    {n:'Canyon de Purcaraccia', w:'Bavella', q:'canyon de Purcaraccia Quenza',
+    {n:'Canyon de Purcaraccia', w:'Bavella', q:'canyon de Purcaraccia Quenza', lat:41.7920, lng:9.2590,
      d:"LE spot mythique : toboggans naturels géants, rappels et sauts sous les aiguilles. À faire encadré (sorties guidées, à réserver). Marche d'approche 45 min."},
   ]
 },
 {
   cat:'Encore des plages', emoji:'🏖️', hex:'#12A5A0',
   items:[
-    {n:'Fautea', w:'25 min au nord', q:'plage de Fautea',
+    {n:'Fautea', w:'25 min au nord', q:'plage de Fautea', lat:41.7080, lng:9.4020,
      d:"Une crique sous une tour génoise, moins courue que ses voisines. Bon snorkeling au pied de la tour."},
-    {n:'Balistra', w:'30 min au sud', q:'plage de Balistra Bonifacio',
+    {n:'Balistra', w:'30 min au sud', q:'plage de Balistra Bonifacio', lat:41.4320, lng:9.2280,
      d:"Grande plage sauvage avec son étang derrière, zéro service et une piste défoncée à la fin — c'est le prix de la tranquillité."},
-    {n:"Golfe de Sant'Amanza", w:'Bonifacio', q:"plage de Maora Sant'Amanza Bonifacio",
+    {n:"Golfe de Sant'Amanza", w:'Bonifacio', q:"plage de Maora Sant'Amanza Bonifacio", lat:41.4095, lng:9.2085,
      d:"Eau calme et peu profonde, paillotes, parfait pour le paddle. Moins spectaculaire que Rondinara, mais rarement blindé."},
-    {n:'Grand Sperone', w:'+10 min après le Petit', q:'plage du Grand Sperone Bonifacio',
+    {n:'Grand Sperone', w:'+10 min après le Petit', q:'plage du Grand Sperone Bonifacio', lat:41.3670, lng:9.2170,
      d:"Le grand frère du Petit Sperone : 10 minutes de marche en plus, deux fois moins de monde, eau tout aussi folle."},
   ]
 },
 {
   cat:'Activités de fou entre potes', emoji:'🚤', hex:'#E0A02C',
   items:[
-    {n:'Journée bateau aux Lavezzi', w:'depuis Bonifacio', q:'excursion îles Lavezzi Bonifacio',
+    {n:'Journée bateau aux Lavezzi', w:'depuis Bonifacio', q:'excursion îles Lavezzi Bonifacio', lat:41.3355, lng:9.2575,
      d:"Réserve naturelle, criques blanches et snorkeling avec les mérous. LA sortie à ne pas rater — réserver la veille en août."},
-    {n:'Location de bateau sans permis', w:'PV, Santa Giulia, Pinarello', q:'location bateau sans permis Porto-Vecchio',
+    {n:'Location de bateau sans permis', w:'PV, Santa Giulia, Pinarello', q:'location bateau sans permis Porto-Vecchio', lat:41.5915, lng:9.2860,
      d:"Cap sur les îles Cerbicale entre potes, sans permis pour les 6 CV. Partir le matin pour la mer d'huile, mouiller dans une crique, pique-nique à bord."},
-    {n:'Canyoning de la Vacca', w:'Bavella', q:'canyon de la Vacca Bavella',
+    {n:'Canyoning de la Vacca', w:'Bavella', q:'canyon de la Vacca Bavella', lat:41.7760, lng:9.2620,
      d:"Sauts jusqu'à 8 m, toboggans et rappels dans les gorges, encadrement pro. Sensations garanties, aucun niveau requis à part savoir nager."},
-    {n:'Xtrem Sud', w:"forêt de l'Ospedale", q:'Xtrem Sud Ospedale',
+    {n:'Xtrem Sud', w:"forêt de l'Ospedale", q:'Xtrem Sud Ospedale', lat:41.6580, lng:9.2280,
      d:"Accrobranche au-dessus du lac de l'Ospedale et tyroliennes géantes dans les pins laricio. Au frais à 900 m quand la côte cuit."},
-    {n:'Baptême de plongée aux Cerbicale', w:'clubs à Porto-Vecchio', q:'club plongée Porto-Vecchio',
+    {n:'Baptême de plongée aux Cerbicale', w:'îles Cerbicale, clubs à PV', q:'club plongée Porto-Vecchio', lat:41.5565, lng:9.3900,
      d:"Eau claire, sars, murènes et gorgones autour des îles Cerbicale. Baptême accessible sans aucune expérience, dès le premier jour."},
   ]
 }
 ];
 
 const discoEl = document.getElementById('disco');
-document.getElementById('discoBody').innerHTML = EXTRAS.map(g=>`
+document.getElementById('discoBody').innerHTML = EXTRAS.map((g,gi)=>`
   <h2 class="dgrp"><i class="gdot" style="background:${g.hex}"></i>${g.emoji}&nbsp; ${g.cat}</h2>
-  ${g.items.map(it=>`
-    <a class="ditem" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(it.q)}" target="_blank" rel="noopener">
+  ${g.items.map((it,ii)=>`
+    <a class="ditem" data-gi="${gi}" data-ii="${ii}" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(it.q)}" rel="noopener">
       <span class="ic">${g.emoji}</span>
       <span class="dt">
         <span class="dn">${it.n}<small>${it.w}</small></span>
@@ -1028,7 +1037,15 @@ document.getElementById('discoBody').innerHTML = EXTRAS.map(g=>`
       <span class="go">›</span>
     </a>`).join('')}
 `).join('') + `<p class="disco-note">Sélection indicative : horaires, prix et conditions à vérifier sur place,
-  surtout hors saison. Chaque ligne ouvre la recherche Google Maps correspondante.</p>`;
+  surtout hors saison. Chaque ligne montre le lieu sur la carte ; l'itinéraire s'ouvre ensuite dans Google Maps.</p>`;
+
+/* Clic sur une ligne : on montre le point sur la carte au lieu de quitter le site */
+discoEl.querySelectorAll('.ditem').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    openExtra(parseInt(a.dataset.gi), parseInt(a.dataset.ii));
+  });
+});
 
 document.getElementById('discoBtn').onclick=()=>{
   closeSheet();
@@ -1036,6 +1053,73 @@ document.getElementById('discoBtn').onclick=()=>{
   discoEl.classList.add('open');
 };
 document.getElementById('closeDisco').onclick=()=>discoEl.classList.remove('open');
+
+/* ---------- Petits points « à découvrir » sur la carte ---------- */
+const extrasLayer = L.layerGroup();
+EXTRAS.forEach((g,gi)=>{
+  g.items.forEach((it,ii)=>{
+    const dot = L.circleMarker([it.lat,it.lng],{
+      radius:7, color:'#fff', weight:2, opacity:.95,
+      fillColor:g.hex, fillOpacity:.95,
+      bubblingMouseEvents:false
+    });
+    dot.bindTooltip(`${g.emoji} ${it.n}`,{direction:'top',offset:[0,-8]});
+    dot.on('click',()=>openExtra(gi,ii));
+    extrasLayer.addLayer(dot);
+  });
+});
+extrasLayer.addTo(map);
+let showExtras = true;
+
+/* Pastille de filtre dédiée aux points bonus */
+{
+  const b = document.createElement('button');
+  b.className='chip glass on';
+  b.style.setProperty('--c','#FF5324');
+  b.setAttribute('aria-pressed','true');
+  b.innerHTML=`<span class="dot"></span>À découvrir`;
+  b.onclick=()=>{
+    showExtras=!showExtras;
+    b.classList.toggle('on',showExtras);
+    b.setAttribute('aria-pressed', showExtras ? 'true' : 'false');
+    if(showExtras) extrasLayer.addTo(map); else map.removeLayer(extrasLayer);
+  };
+  fEl.appendChild(b);
+}
+
+/* Mini-fiche d'un spot bonus */
+function openExtra(gi, ii){
+  const g=EXTRAS[gi], it=g.items[ii];
+  const gm=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(it.q)}`;
+  const dir=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(it.q)}`;
+
+  body.innerHTML = `
+    <div class="xhero" style="--c:${g.hex}"><span>${g.emoji}</span></div>
+    <div class="eyebrow"><span class="dot" style="background:${g.hex}"></span>${g.cat} · bonus</div>
+    <h2 class="name" id="spotName">${it.n}</h2>
+    <p class="desc"><b>${it.w}.</b> ${it.d}</p>
+    <p class="xnote">Position indicative sur la carte — l'itinéraire utilise la fiche Google Maps du lieu.</p>
+    <div class="actions">
+      <a class="btn btn-go" href="${dir}" target="_blank" rel="noopener">Itinéraire</a>
+      <a class="btn btn-photos" href="${gm}" target="_blank" rel="noopener">Google Maps</a>
+    </div>`;
+
+  document.querySelectorAll('.step.active').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.card.sel').forEach(c=>c.classList.remove('sel'));
+  active=null;
+
+  sheet.classList.add('open');
+  document.body.classList.add('sheet-open');
+  body.scrollTop=0;
+  listEl.classList.remove('open');
+  discoEl.classList.remove('open');
+  document.getElementById('closeSheet').focus({preventScroll:true});
+
+  const desktop = window.innerWidth>=820 && window.innerHeight>=520;
+  const off = desktop ? [0.15,0] : [0,-0.045];
+  const dest=[it.lat+off[1], it.lng+off[0]], z=Math.max(map.getZoom(),13);
+  if(RM) map.setView(dest, z); else map.flyTo(dest, z, {duration:.6});
+}
 
 render();
 map.fitBounds(SPOTS.map(s=>[s.lat,s.lng]),{padding:[70,70]});
