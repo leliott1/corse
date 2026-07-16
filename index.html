@@ -5,203 +5,256 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Corse du Sud, les spots</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Karla:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --granite:#12222B;
-    --granite-2:#1B323D;
-    --sable:#EFE7D8;
-    --mer:#17A6A0;
-    --nord:#3B7EA8;
-    --porphyre:#C0563F;
-    --pin:#43704E;
+    --encre:#1C2B36;         /* texte principal */
+    --encre-2:#5A6B77;       /* texte secondaire */
+    --brume:#F4F6F8;         /* fonds doux */
+    --blanc:#FFFFFF;
+    --corail:#FF5324;        /* accent façon Polarsteps */
+    --corail-fonce:#E64514;
     --base:#E0A02C;
-    --texte:#F2F6F5;
-    --gris:#93A6AE;
+    --sud:#12A5A0;
+    --nord:#3E8CC7;
+    --boni:#C0563F;
+    --pin:#43704E;
+    --ombre:0 8px 28px rgba(16,24,40,.16);
+    --ombre-leg:0 3px 12px rgba(16,24,40,.12);
+    --radius:18px;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
   body{
-    font-family:'Karla',system-ui,sans-serif;
-    background:var(--granite);
-    color:var(--texte);
+    font-family:'Nunito',system-ui,sans-serif;
+    background:var(--brume);
+    color:var(--encre);
     overflow:hidden;
   }
-  #map{position:absolute;inset:0;background:var(--granite)}
+  #map{position:absolute;inset:0;background:#CBD8DF}
 
-  /* ---------- Bandeau ---------- */
+  /* ---------- En-tête flottant ---------- */
   .topbar{
-    position:absolute;top:0;left:0;right:0;z-index:1000;
-    padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;
-    background:linear-gradient(to bottom,rgba(18,34,43,.96) 55%,rgba(18,34,43,0));
+    position:absolute;z-index:1000;left:12px;right:12px;
+    top:calc(env(safe-area-inset-top) + 12px);
     pointer-events:none;
   }
-  .title{
-    font-family:'Anton',sans-serif;
-    font-size:20px;letter-spacing:.06em;text-transform:uppercase;
-    line-height:1;
+  .brand{
+    display:inline-block;pointer-events:auto;
+    background:var(--blanc);border-radius:var(--radius);
+    box-shadow:var(--ombre-leg);
+    padding:10px 16px 9px;
   }
-  .title span{color:var(--mer)}
-  .sub{
-    font-family:'JetBrains Mono',monospace;
-    font-size:10px;color:var(--gris);letter-spacing:.08em;margin-top:5px;
-    text-transform:uppercase;
-  }
+  .title{font-size:19px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+  .title span{color:var(--corail)}
+  .sub{font-size:11px;font-weight:700;color:var(--encre-2);margin-top:1px}
 
   /* ---------- Filtres ---------- */
   .filters{
     position:absolute;z-index:1000;left:0;right:0;
-    top:calc(env(safe-area-inset-top) + 62px);
-    display:flex;gap:7px;overflow-x:auto;padding:0 14px 4px;
+    top:calc(env(safe-area-inset-top) + 78px);
+    display:flex;gap:8px;overflow-x:auto;padding:4px 12px 8px;
     scrollbar-width:none;
   }
   .filters::-webkit-scrollbar{display:none}
   .chip{
-    flex:0 0 auto;cursor:pointer;border:1px solid rgba(255,255,255,.16);
-    background:rgba(18,34,43,.88);color:var(--gris);
-    padding:6px 11px;border-radius:999px;
-    font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
-    display:flex;align-items:center;gap:6px;
-    backdrop-filter:blur(8px);transition:.15s;
+    flex:0 0 auto;cursor:pointer;border:0;
+    background:var(--blanc);color:var(--encre-2);
+    padding:8px 13px;border-radius:999px;
+    font-family:'Nunito',sans-serif;
+    font-size:12px;font-weight:800;
+    display:flex;align-items:center;gap:7px;
+    box-shadow:var(--ombre-leg);transition:.15s;
   }
-  .chip .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
-  .chip.on{color:var(--granite);border-color:transparent}
-  .chip:focus-visible{outline:2px solid var(--sable);outline-offset:2px}
+  .chip .dot{width:8px;height:8px;border-radius:50%;background:var(--c)}
+  .chip.on{background:var(--c);color:#fff}
+  .chip.on .dot{background:#fff}
+  .chip:focus-visible{outline:2px solid var(--corail);outline-offset:2px}
 
-  /* ---------- Marqueurs ---------- */
-  .pin{
-    width:26px;height:26px;border-radius:50% 50% 50% 4px;
-    transform:rotate(-45deg);
-    border:2px solid rgba(255,255,255,.9);
-    box-shadow:0 3px 8px rgba(0,0,0,.5);
+  /* ---------- Marqueurs photo ---------- */
+  .step{position:relative;width:44px;height:44px;transition:transform .18s}
+  .step .ph{
+    width:44px;height:44px;border-radius:50%;
+    border:3px solid #fff;background:var(--c) center/cover no-repeat;
+    box-shadow:0 3px 10px rgba(16,24,40,.35);
     display:flex;align-items:center;justify-content:center;
-    transition:transform .15s;
+    color:#fff;font-weight:800;font-size:15px;
   }
-  .pin b{
-    transform:rotate(45deg);
-    font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;
-    color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4);
+  .step .num{
+    position:absolute;top:-4px;right:-4px;
+    min-width:18px;height:18px;padding:0 4px;border-radius:9px;
+    background:var(--corail);border:2px solid #fff;
+    color:#fff;font-size:10px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;
   }
-  .pin.active{transform:rotate(-45deg) scale(1.35);z-index:999}
+  .step.active{transform:scale(1.3);z-index:999}
+  .step.active .ph{border-color:var(--corail)}
 
-  /* ---------- Fiche ---------- */
+  /* ---------- Carrousel de cartes ---------- */
+  .cards{
+    position:absolute;z-index:1000;left:0;right:0;
+    bottom:calc(env(safe-area-inset-bottom) + 12px);
+    display:flex;gap:12px;overflow-x:auto;
+    padding:14px calc(50vw - 125px) 6px;
+    scroll-snap-type:x mandatory;scrollbar-width:none;
+  }
+  .cards::-webkit-scrollbar{display:none}
+  .card{
+    flex:0 0 250px;scroll-snap-align:center;cursor:pointer;
+    background:var(--blanc);border-radius:var(--radius);
+    box-shadow:var(--ombre);overflow:hidden;
+    transition:transform .18s, box-shadow .18s;
+    border:2px solid transparent;
+  }
+  .card.sel{transform:translateY(-6px);border-color:var(--corail)}
+  .card .im{
+    height:110px;background:var(--c) center/cover no-repeat;position:relative;
+  }
+  .card .im .badge{
+    position:absolute;top:8px;left:8px;
+    background:rgba(255,255,255,.94);color:var(--encre);
+    font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;
+    display:flex;align-items:center;gap:5px;
+  }
+  .card .im .badge i{width:7px;height:7px;border-radius:50%;background:var(--c);display:block}
+  .card .im.noph{display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--c),color-mix(in srgb,var(--c) 55%,#fff))}
+  .card .im.noph b{color:#fff;font-size:26px;font-weight:800;opacity:.85}
+  .card .tx{padding:9px 13px 11px}
+  .card .nm{font-size:14.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card .mt{font-size:11px;font-weight:700;color:var(--encre-2);margin-top:2px;
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* ---------- Boutons flottants ---------- */
+  /* Au-dessus de la liste (1100) pour pouvoir la refermer, sous la fiche (1200) */
+  .fabs{
+    position:absolute;z-index:1150;right:12px;
+    bottom:calc(env(safe-area-inset-bottom) + 210px);
+    display:flex;flex-direction:column;gap:10px;
+  }
+  .fab{
+    width:46px;height:46px;border-radius:50%;border:0;cursor:pointer;
+    background:var(--blanc);color:var(--encre);
+    box-shadow:var(--ombre-leg);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .fab svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .fab:active{transform:scale(.94)}
+
+  /* ---------- Fiche détaillée ---------- */
   .sheet{
     position:absolute;z-index:1200;left:0;right:0;bottom:0;
-    background:var(--granite-2);
-    border-radius:18px 18px 0 0;
-    box-shadow:0 -10px 40px rgba(0,0,0,.6);
-    transform:translateY(101%);
+    background:var(--blanc);
+    border-radius:24px 24px 0 0;
+    box-shadow:0 -12px 44px rgba(16,24,40,.28);
+    transform:translateY(103%);
     transition:transform .32s cubic-bezier(.22,1,.36,1);
-    max-height:82vh;display:flex;flex-direction:column;
-    border-top:1px solid rgba(255,255,255,.1);
+    max-height:86vh;display:flex;flex-direction:column;
   }
   .sheet.open{transform:translateY(0)}
-  .grip{
-    padding:9px 0 5px;display:flex;justify-content:center;cursor:grab;flex:0 0 auto;
-  }
-  .grip i{width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,.25);display:block}
-  .sheet-body{overflow-y:auto;padding:0 18px calc(env(safe-area-inset-bottom) + 18px);-webkit-overflow-scrolling:touch}
+  .grip{padding:10px 0 4px;display:flex;justify-content:center;flex:0 0 auto}
+  .grip i{width:40px;height:5px;border-radius:3px;background:#E2E8EC;display:block}
+  .sheet-body{overflow-y:auto;padding:6px 18px calc(env(safe-area-inset-bottom) + 18px);-webkit-overflow-scrolling:touch}
   .close{
-    position:absolute;top:10px;right:12px;z-index:2;
-    width:30px;height:30px;border-radius:50%;border:0;cursor:pointer;
-    background:rgba(255,255,255,.1);color:var(--texte);font-size:16px;line-height:1;
-  }
-  .eyebrow{
-    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;
-    text-transform:uppercase;display:flex;align-items:center;gap:7px;margin-bottom:5px;
-  }
-  .eyebrow .dot{width:8px;height:8px;border-radius:50%}
-  .name{
-    font-family:'Anton',sans-serif;font-size:27px;line-height:1.02;
-    letter-spacing:.02em;text-transform:uppercase;margin-bottom:12px;
+    position:absolute;top:12px;right:14px;z-index:2;
+    width:32px;height:32px;border-radius:50%;border:0;cursor:pointer;
+    background:var(--brume);color:var(--encre-2);font-size:17px;line-height:1;font-weight:700;
   }
   .photo{
-    width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;
-    background:var(--granite);display:block;margin-bottom:6px;
+    width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:16px;
+    background:var(--brume);display:block;
   }
+  .nophoto{
+    width:100%;aspect-ratio:16/9;border-radius:16px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    background:linear-gradient(135deg,var(--c),color-mix(in srgb,var(--c) 55%,#fff));
+    color:#fff;
+  }
+  .nophoto-big{font-size:34px;font-weight:800;opacity:.9}
+  .nophoto-txt{font-size:11px;font-weight:700;opacity:.85}
   .credit{
-    font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--gris);
-    margin-bottom:12px;display:block;text-decoration:none;
+    font-size:10px;font-weight:600;color:#98A6B0;
+    margin:6px 2px 0;display:block;text-decoration:none;
   }
-  .credit:hover{color:var(--mer)}
-  .desc{font-size:14.5px;line-height:1.55;color:#DCE6E4;margin-bottom:14px}
-
-  .facts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(255,255,255,.09);
-         border:1px solid rgba(255,255,255,.09);border-radius:10px;overflow:hidden;margin-bottom:14px}
-  .fact{background:var(--granite-2);padding:9px 11px}
-  .fact dt{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--gris);
-           letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
-  .fact dd{font-size:13px;font-weight:600}
-
+  .credit:hover{color:var(--corail)}
+  .eyebrow{
+    font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+    display:flex;align-items:center;gap:7px;margin:14px 0 3px;color:var(--encre-2);
+  }
+  .eyebrow .dot{width:9px;height:9px;border-radius:50%}
+  .name{font-size:25px;font-weight:800;letter-spacing:-.02em;line-height:1.05;margin-bottom:10px}
+  .desc{font-size:14.5px;line-height:1.6;color:#3C4A54;margin-bottom:14px}
+  .facts{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+  .fact{background:var(--brume);padding:10px 12px;border-radius:14px}
+  .fact dt{font-size:10px;font-weight:800;color:var(--encre-2);letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px}
+  .fact dd{font-size:13px;font-weight:700}
   .gps{
     display:flex;align-items:center;justify-content:space-between;gap:10px;
-    background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.09);
-    border-radius:10px;padding:10px 12px;margin-bottom:14px;
+    background:var(--brume);border-radius:14px;padding:11px 13px;margin-bottom:14px;
   }
-  .gps code{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--mer);letter-spacing:.02em}
+  .gps code{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--corail-fonce);letter-spacing:.02em}
   .copy{
-    border:1px solid rgba(255,255,255,.2);background:transparent;color:var(--texte);
-    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.08em;
-    padding:5px 9px;border-radius:6px;cursor:pointer;text-transform:uppercase;flex:0 0 auto;
+    border:0;background:var(--blanc);color:var(--encre);
+    font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;
+    padding:6px 11px;border-radius:9px;cursor:pointer;flex:0 0 auto;
+    box-shadow:var(--ombre-leg);
   }
-  .copy:hover{background:rgba(255,255,255,.1)}
-
-  .actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .btn{
     display:flex;align-items:center;justify-content:center;gap:7px;
-    padding:12px;border-radius:10px;text-decoration:none;
-    font-size:13px;font-weight:700;letter-spacing:.02em;
+    padding:13px;border-radius:14px;text-decoration:none;
+    font-size:13.5px;font-weight:800;
   }
-  .btn-go{background:var(--mer);color:#08201F}
-  .btn-photos{background:rgba(255,255,255,.09);color:var(--texte);border:1px solid rgba(255,255,255,.14)}
-  .btn:active{opacity:.75}
+  .btn-go{background:var(--corail);color:#fff;box-shadow:0 6px 18px rgba(255,83,36,.35)}
+  .btn-go:active{background:var(--corail-fonce)}
+  .btn-photos{background:var(--brume);color:var(--encre)}
+  .btn:active{opacity:.85}
 
-  /* ---------- Liste ---------- */
-  .list-toggle{
-    position:absolute;z-index:1000;right:12px;bottom:calc(env(safe-area-inset-bottom) + 16px);
-    background:var(--sable);color:var(--granite);border:0;cursor:pointer;
-    font-family:'Anton',sans-serif;letter-spacing:.08em;text-transform:uppercase;
-    font-size:12px;padding:12px 16px;border-radius:999px;
-    box-shadow:0 6px 20px rgba(0,0,0,.5);
-  }
-  .vue-toggle{
-    position:absolute;z-index:1000;right:12px;bottom:calc(env(safe-area-inset-bottom) + 68px);
-    background:rgba(18,34,43,.92);color:var(--texte);
-    border:1px solid rgba(255,255,255,.18);cursor:pointer;
-    font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;
-    font-size:10px;padding:9px 13px;border-radius:999px;backdrop-filter:blur(8px);
-    box-shadow:0 4px 14px rgba(0,0,0,.45);
-  }
+  /* ---------- Liste (timeline) ---------- */
   .list{
-    position:absolute;z-index:1100;inset:0;background:rgba(18,34,43,.985);
-    overflow-y:auto;padding:calc(env(safe-area-inset-top) + 58px) 14px calc(env(safe-area-inset-bottom) + 80px);
+    position:absolute;z-index:1100;inset:0;background:var(--blanc);
+    overflow-y:auto;
+    padding:calc(env(safe-area-inset-top) + 74px) 16px calc(env(safe-area-inset-bottom) + 30px);
     display:none;
   }
   .list.open{display:block}
-  .grp{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;
-       text-transform:uppercase;color:var(--gris);margin:16px 0 7px;
-       border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:5px}
-  .row{
-    display:flex;align-items:center;gap:11px;padding:11px 4px;cursor:pointer;
-    border-bottom:1px solid rgba(255,255,255,.05);
+  .grp{
+    font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--c);margin:20px 0 6px;display:flex;align-items:center;gap:8px;
   }
-  .row .bar{width:3px;height:26px;border-radius:2px;flex:0 0 auto}
+  .grp::after{content:'';flex:1;height:1px;background:#EDF1F4}
+  .row{
+    display:flex;align-items:center;gap:12px;padding:9px 2px;cursor:pointer;
+    border-radius:14px;
+  }
+  .row:hover{background:var(--brume)}
+  .row .th{
+    width:52px;height:52px;border-radius:14px;flex:0 0 auto;
+    background:var(--c) center/cover no-repeat;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:800;font-size:16px;
+  }
   .row .txt{flex:1;min-width:0}
-  .row .rn{font-size:15px;font-weight:700}
-  .row .rd{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gris);margin-top:2px}
-  .row .num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gris)}
+  .row .rn{font-size:15px;font-weight:800}
+  .row .rd{font-size:11.5px;font-weight:600;color:var(--encre-2);margin-top:1px}
+  .row .num{font-size:11px;font-weight:800;color:#B9C4CC}
+  .list-note{font-size:10.5px;font-weight:600;color:#98A6B0;margin-top:26px;line-height:1.5}
 
-  .leaflet-container{background:#0B171D;font-family:'Karla',sans-serif}
-  .leaflet-control-attribution{font-size:9px;background:rgba(18,34,43,.8);color:var(--gris)}
-  .leaflet-control-attribution a{color:var(--mer)}
-  .leaflet-bar a{background:var(--granite-2);color:var(--texte);border-color:rgba(255,255,255,.12)}
-  .leaflet-bar a:hover{background:var(--mer);color:var(--granite)}
+  .leaflet-container{background:#CBD8DF;font-family:'Nunito',sans-serif}
+  .leaflet-control-attribution{font-size:9px;background:rgba(255,255,255,.75);color:#7C8B95;border-radius:8px 0 0 0}
+  .leaflet-control-attribution a{color:var(--corail-fonce)}
+  .leaflet-bar{border:0 !important;box-shadow:var(--ombre-leg) !important;border-radius:12px !important;overflow:hidden}
+  .leaflet-bar a{background:var(--blanc);color:var(--encre);border-color:#EDF1F4}
+  .leaflet-bar a:hover{background:var(--brume)}
 
   @media (min-width:820px){
-    .sheet{left:auto;right:14px;bottom:14px;width:390px;border-radius:16px;max-height:calc(100vh - 130px);
-           transform:translateY(calc(100% + 30px))}
+    .cards{padding:14px calc(50vw - 135px) 6px}
+    .card{flex-basis:270px}
+    .sheet{left:auto;right:16px;bottom:16px;width:400px;border-radius:22px;max-height:calc(100vh - 120px);
+           transform:translateY(calc(100% + 40px))}
     .sheet.open{transform:translateY(0)}
-    .title{font-size:24px}
+    .title{font-size:22px}
+    .fabs{bottom:calc(env(safe-area-inset-bottom) + 230px)}
   }
   @media (prefers-reduced-motion:reduce){
     *{transition:none !important;animation:none !important}
@@ -213,14 +266,24 @@
 <div id="map"></div>
 
 <div class="topbar">
-  <div class="title">Corse du <span>Sud</span></div>
-  <div class="sub" id="counter">17 spots, base Porto-Vecchio</div>
+  <div class="brand">
+    <div class="title">Corse du <span>Sud</span></div>
+    <div class="sub" id="counter">17 spots · base Porto-Vecchio</div>
+  </div>
 </div>
 
 <div class="filters" id="filters"></div>
 
-<button class="vue-toggle" id="vueToggle">Plan</button>
-<button class="list-toggle" id="listToggle">Liste</button>
+<div class="fabs">
+  <button class="fab" id="vueToggle" aria-label="Basculer satellite / plan" title="Satellite / plan">
+    <svg viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="m2 13 10 5 10-5"/></svg>
+  </button>
+  <button class="fab" id="listToggle" aria-label="Ouvrir la liste des spots" title="Liste">
+    <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg>
+  </button>
+</div>
+
+<div class="cards" id="cards"></div>
 <div class="list" id="list"></div>
 
 <div class="sheet" id="sheet" role="dialog" aria-modal="false">
@@ -232,136 +295,172 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 const CATS = {
-  base:  {label:'Base',           color:'#E0A02C'},
-  sud:   {label:'Plages sud PV',  color:'#17A6A0'},
-  nord:  {label:'Plages nord PV', color:'#3B7EA8'},
-  boni:  {label:'Extrême sud',    color:'#C0563F'},
-  mont:  {label:'Alta Rocca',     color:'#43704E'}
+  base:  {label:'Base',           hex:'#E0A02C'},
+  sud:   {label:'Plages sud PV',  hex:'#12A5A0'},
+  nord:  {label:'Plages nord PV', hex:'#3E8CC7'},
+  boni:  {label:'Extrême sud',    hex:'#C0563F'},
+  mont:  {label:'Alta Rocca',     hex:'#43704E'}
 };
 
-const F = (n) => 'https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(n) + '?width=900';
-const FP = (n) => 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(n);
-
+/* Photos hébergées dans le dépôt (dossier img/), crédits sur chaque fiche */
 const SPOTS = [
 {
   n:'Porto-Vecchio', cat:'base', lat:41.591369, lng:9.278311,
   pid:'ChIJSRtsHX2B2RIRxqV-tOoz2fU',
   trajet:'Point de départ', acces:'Ville, port de plaisance',
-  img:'Aerial view of the southeast coast of Corsica, France (52724280293).jpg',
-  cap:'Côte sud-est de la Corse, Wikimedia Commons',
+  img:'img/porto-vecchio.jpg',
+  cap:'Photo dronepicr, CC BY 2.0, Wikimedia Commons',
+  capUrl:'https://commons.wikimedia.org/wiki/File:Aerial view of the southeast coast of Corsica, France (52724280293).jpg',
   d:"Le camp de base. Vieille ville perchée dans la citadelle génoise, marina en contrebas, restos et bars ouverts tard en saison. Tout le reste de la carte est à moins de 1 h 05 de route d'ici. Ravitaillement, essence et supermarchés se font ici, il n'y a quasiment rien sur les plages."
 },
 {
   n:'Palombaggia', cat:'sud', lat:41.5579257, lng:9.3253045,
   pid:'ChIJ0w9YUIqC2RIRL7bpRUsVYG4',
-  trajet:'15 km, environ 25 min', acces:'Parkings payants le long de la route',
-  img:'Aerial view of Palombaggia Beach, Corsica, France (52724214180).jpg',
-  cap:'Vue aérienne de Palombaggia, Wikimedia Commons',
+  trajet:'15 km · 25 min', acces:'Parkings payants le long de la route',
+  img:'img/palombaggia.jpg',
+  cap:'Photo dronepicr, CC BY 2.0, Wikimedia Commons',
+  capUrl:'https://commons.wikimedia.org/wiki/File:Aerial view of Palombaggia Beach, Corsica, France (52724214180).jpg',
   d:"La plus connue du secteur, et elle tient sa réputation : sable blanc, eau turquoise, pins parasols et roches de porphyre rose qui découpent la baie en plusieurs sections. Vue sur les îles Cerbicale. Bons spots de snorkeling. Plusieurs paillotes et restos de plage. Le parking gratuit est rare, les grands parkings payants sont à l'extrémité nord-est. Très fréquentée en juillet et août : viser avant 10 h ou après 17 h."
 },
 {
   n:'Tamaricciu', cat:'sud', lat:41.5517225, lng:9.3143128,
   pid:'ChIJrSUKMdqD2RIRvQUa-6x7sMQ',
-  trajet:'17 km, environ 28 min', acces:'Parking en haut, 10 min à pied',
+  trajet:'17 km · 28 min', acces:'Parking en haut, 10 min à pied',
+  img:'img/tamaricciu.jpg',
+  cap:'Photo cazah, CC BY 3.0, Wikimedia Commons',
+  capUrl:'https://commons.wikimedia.org/wiki/File:Tamaricciu - panoramio.jpg',
   d:"La voisine sud de Palombaggia, plus petite et souvent plus calme. Gros blocs de granite au-dessus et sous l'eau, et le fond descend plus vite qu'ailleurs : c'est le meilleur spot snorkeling du coin. Accès par le sentier depuis le parking du haut (payant en haute saison, environ 10 € la journée) ou en marchant 10 min depuis Palombaggia à travers le maquis. Le pin emblématique penché sur l'eau est tombé, il ne reste que la souche."
 },
 {
   n:'Carataggio', cat:'sud', lat:41.5747222, lng:9.3463889,
   pid:'ChIJ3_gdE96C2RIRsuNWrd1j0Ys',
-  trajet:'12 km, puis 20 à 25 min de marche', acces:'Stationnement sur la route, sentier non balisé',
+  trajet:'12 km + 20-25 min à pied', acces:'Stationnement sur la route, sentier non balisé',
   d:"La récompense de l'effort. Pas de parking dédié : on se gare le long de la route parallèle puis on descend par un sentier non balisé, 20 à 25 min, poussiéreux mais sans difficulté. Résultat, elle reste vide en dehors du pic d'août. Rien sur place, prévoir eau et ombre. La lagune peut devenir trouble l'après-midi, y aller le matin."
 },
 {
   n:'Santa Giulia', cat:'sud', lat:41.5311579, lng:9.2737819,
   pid:'ChIJ7ZE1wQB_2RIRmdsTMdyTqf4',
-  trajet:'12 km, environ 20 min', acces:'Parking payant, environ 5 € la journée',
+  trajet:'12 km · 20 min', acces:'Parking payant, environ 5 € la journée',
+  img:'img/santa-giulia.jpg',
+  cap:'Photo Pierre Bona, CC BY-SA 4.0, Wikimedia Commons',
+  capUrl:'https://commons.wikimedia.org/wiki/File:Porto-Vecchio plage de Santa Giulia.jpg',
   d:"Grande baie fermée en lagune, eau très claire et peu profonde, idéale pour les sports nautiques (location de matériel sur place) et pour les enfants. Plusieurs bars et restos de plage. Réserve : le nettoyage du rivage est irrégulier, il y a régulièrement des bancs d'algues échouées sur plusieurs mètres. L'eau, elle, reste limpide. Bondée en août."
 },
 {
   n:'Cala Rossa', cat:'nord', lat:41.620454, lng:9.3327156,
   pid:'ChIJy18pu4KE2RIRdGcXylEZP_M',
-  trajet:'10 km, environ 20 min', acces:'Stationnement gratuit sur la rue',
+  trajet:'10 km · 20 min', acces:'Stationnement gratuit sur la rue',
+  img:'img/cala-rossa.jpg',
+  cap:'Photo bonacherajf, CC BY-NC-ND 2.0, Flickr',
+  capUrl:'https://www.flickr.com/photos/36501387@N08/49725030077',
   d:"Grande plage de sable fin au nord du golfe, eau plus foncée que les plages du sud et qui devient profonde très vite, donc peu adaptée aux petits. Quelques rochers à escalader pour la photo de la baie. Un seul resto, pas de toilettes publiques. De la place en général, mais y être tôt le matin ou vers 18 h 30 en pleine saison."
 },
 {
   n:'San Ciprianu', cat:'nord', lat:41.6385136, lng:9.3493351,
   pid:'ChIJYWikaUSF2RIRHZk92rEt8J0',
-  trajet:'12 km, environ 20 min', acces:'Parking gratuit à côté de la plage',
+  trajet:'12 km · 20 min', acces:'Parking gratuit à côté de la plage',
+  img:'img/san-ciprianu.jpg',
+  cap:'Photo Edison McCullen, CC BY 4.0, Wikimedia Commons',
+  capUrl:'https://commons.wikimedia.org/wiki/File:Plage de San Ciprianu – Lecci.jpg',
   d:"Longue plage de sable, eau chaude, peu profonde et très claire, avec de l'ombre naturelle sous les arbres. Le meilleur compromis du secteur nord : accès facile, parking gratuit collé à la plage, bars et restos, et des herbiers dans la baie où l'on voit des poissons au masque. Beaucoup de locaux le week-end. Sports tractés et location de matériel nautique sur place. Chiens non admis."
 },
 {
   n:'Pinarello', cat:'nord', lat:41.6730794, lng:9.3738679,
   pid:'ChIJJXynabSa2RIRV3xbwduyBM4',
-  trajet:'18 km, environ 25 min', acces:'Stationnement gratuit sur la route derrière',
+  trajet:'18 km · 25 min', acces:'Stationnement gratuit sur la route derrière',
+  img:'img/pinarello.jpg',
+  cap:'Photo Rémih, CC BY-SA 4.0, Wikimedia Commons',
+  capUrl:'https://commons.wikimedia.org/wiki/File:Pinarellu beach.jpg',
   d:"Grande baie, eau parmi les plus chaudes du coin, faible profondeur sur les 30 premiers mètres. La partie sud est plus étroite, moins fréquentée, avec un petit bar tranquille : c'est là qu'il faut aller. Location de kayaks à prix corrects. Restauration variée. Pas de poubelles ni de surveillance, et des bateaux au mouillage juste devant."
 },
 {
   n:'Rondinara', cat:'boni', lat:41.4679718, lng:9.2668734,
   pid:'ChIJMb_oO6Z-2RIRQyhduRLd_CM',
-  trajet:'30 km, environ 35 à 40 min', acces:'Parking organisé, environ 6 € la journée',
-  img:'Top-down aerial of yachts at Rondinara Bay, France (52724210800).jpg',
-  cap:'Baie de la Rondinara vue du ciel, Wikimedia Commons',
+  trajet:'30 km · 35-40 min', acces:'Parking organisé, environ 6 € la journée',
+  img:'img/rondinara.jpg',
+  cap:'Photo dronepicr, CC BY 2.0, Wikimedia Commons',
+  capUrl:'https://commons.wikimedia.org/wiki/File:Top-down aerial of yachts at Rondinara Bay, France (52724210800).jpg',
   d:"Baie en coquillage presque fermée, à mi-chemin entre Porto-Vecchio et Bonifacio. Quasiment pas de vagues, eau peu profonde sur une grande distance. Aller vers l'extrémité gauche : la partie centrale et le ponton concentrent les algues et la vase. Bar, resto et terrain de volley. Accès par 10 km de route très sinueuse. Peu de transats à louer, prendre son parasol. Parking rempli tôt en pleine saison."
 },
 {
   n:'Bonifacio', cat:'boni', lat:41.3879921, lng:9.1605295,
   pid:'ChIJU6MxM47Z2xIR-nsWvBlOJtk',
-  trajet:'28 km, environ 35 min', acces:'Parkings payants numérotés, monter jusqu\'au 4 ou 5',
-  img:'Bonifacio falaises escalier roi Aragon.jpg',
-  cap:'Falaises et escalier du roi d\'Aragon, Myrabella, CC BY-SA 3.0',
+  trajet:'28 km · 35 min', acces:'Parkings payants numérotés, monter jusqu\'au 4 ou 5',
+  img:'img/bonifacio.jpg',
+  cap:'Photo Myrabella, CC BY-SA 3.0, Wikimedia Commons',
+  capUrl:'https://commons.wikimedia.org/wiki/File:Bonifacio falaises escalier roi Aragon.jpg',
   d:"La ville haute posée sur des falaises calcaires verticales, avec la citadelle, les bastions et la vieille ville. La vue depuis les hauteurs et depuis la mer est le morceau de bravoure de tout le sud. À faire : l'escalier du roi d'Aragon taillé dans la falaise, et surtout une sortie bateau vers les falaises et la réserve des Lavezzi. C'est touristique et ça se sent. Ne pas s'arrêter au premier parking, monter jusqu'au 4 ou 5 : moins cher et bien meilleure vue."
 },
 {
   n:'Piantarella', cat:'boni', lat:41.3736655, lng:9.2209307,
   pid:'ChIJkTJu4fBj2RIR8z6Sw5uIDdU',
-  trajet:'34 km, environ 45 min', acces:'Stationnement compliqué, aucune signalisation',
+  trajet:'34 km · 45 min', acces:'Stationnement compliqué, aucune signalisation',
+  img:'img/piantarella.jpg',
+  cap:'Photo lo.tangelini, CC BY-SA 2.0, Wikimedia Commons',
+  capUrl:'https://commons.wikimedia.org/wiki/File:Flickr - lo.tangelini - Piantarella.jpg',
   d:"Le spot nautique de l'extrême sud : eau très claire, faible profondeur, vent régulier. C'est la base de départ pour le kitesurf, le paddle et le kayak, et on traverse à pied en 5 min dans l'eau jusqu'à l'île Piana en face (rien dessus, ni bar ni resto). Point noir : quand les algues chauffent au soleil, l'odeur de la plage et de l'étang voisin est franchement désagréable. Vue sur les îles du nord-est de la Sardaigne."
 },
 {
   n:'Petit Sperone', cat:'boni', lat:41.3708787, lng:9.221232,
   pid:'ChIJLVLUesJi2RIRceAHMrP3Hqg',
-  trajet:'34 km, puis 10 à 15 min de marche', acces:'Depuis Piantarella, passage sur les rochers',
+  trajet:'34 km + 10-15 min à pied', acces:'Depuis Piantarella, passage sur les rochers',
+  img:'img/petit-sperone.jpg',
+  cap:'Photo JeanbaptisteM, CC BY 2.0, Flickr',
+  capUrl:'https://www.flickr.com/photos/37839628@N08/14814532948',
   d:"Petite crique confidentielle, une des plus belles eaux du secteur. On y accède uniquement en traversant Piantarella puis en franchissant des rochers : chaussures fermées obligatoires, le passage change de largeur selon le niveau de l'eau. Peu de place, donc arriver tôt. En prolongeant 10 min à pied, on atteint le Grand Sperone, aussi beau et plus grand. Aucun service sur place, le seul café est près du parking."
 },
 {
   n:"Forêt de l'Ospedale", cat:'mont', lat:41.667553, lng:9.238094,
   pid:'ChIJdYI-klWG2RIR_IcopCXQHWA',
-  trajet:'20 km, environ 30 min', acces:'Route D368, stationnement libre',
+  trajet:'20 km · 30 min', acces:'Route D368, stationnement libre',
+  img:'img/ospedale.jpg',
+  cap:'Photo Leblanc Philippe, domaine public, Wikimedia Commons',
+  capUrl:'https://commons.wikimedia.org/wiki/File:Lac de L’Ospedal.jpeg',
   d:"Premier étage de la montagne, à 900 m d'altitude, pins laricio et blocs de granite. Le lac de barrage donne le décor mais le vrai intérêt est de se garer et de marcher : plusieurs sentiers partent du plan d'eau vers des points de vue sur le golfe de Porto-Vecchio. Un arrêt à la sortie du village vers Zonza offre un panorama complet sur la baie. Bien plus frais que la côte, parfait quand il fait 35 °C en bas."
 },
 {
   n:'Piscia di Gallu', cat:'mont', lat:41.6806159, lng:9.2155734,
   pid:'ChIJCxmSoI2H2RIRnp-2QYZ7hKI',
-  trajet:'25 km, environ 35 min, rando 2 h aller-retour', acces:'Parking sur site, environ 5 €',
+  trajet:'25 km · 35 min + rando 2 h A/R', acces:'Parking sur site, environ 5 €',
+  img:'img/piscia-di-gallu.jpg',
+  cap:'Photo Donarreiskoffer, CC BY-SA 4.0, Wikimedia Commons',
+  capUrl:'https://commons.wikimedia.org/wiki/File:Waterfall of Piscia di Gallo 03.jpg',
   d:"Cascade de 60 m au fond d'un chaos granitique. Le sentier jusqu'au belvédère est facile, environ 1 h aller-retour, un peu mal balisé par endroits. La descente jusqu'au pied de la cascade est raide et technique, à éviter avec de jeunes enfants. Compter 2 h à 3 h pour la boucle complète. Chaussures de rando indispensables. À faire au printemps ou début d'été, le débit chute fortement en août."
 },
 {
   n:'Zonza', cat:'mont', lat:41.749626, lng:9.171887,
   pid:'ChIJ_zpDerGI2RIRcFeV_aUZCAQ',
-  trajet:'40 km, environ 50 min', acces:'Village, stationnement libre',
+  trajet:'40 km · 50 min', acces:'Village, stationnement libre',
+  img:'img/zonza.jpg',
+  cap:'Photo Philippe Dollé, CC BY 2.5, Wikimedia Commons',
+  capUrl:'https://commons.wikimedia.org/wiki/File:Zonza - Aiguilles Bavella.jpg',
   d:"Village de granite à 900 m, au pied du massif de Bavella, en plein parc naturel régional. C'est la porte d'entrée de l'Alta Rocca et le point de ravitaillement avant Bavella : restos, boulangerie, essence. Panorama sur les Aiguilles et sur l'Incudine. Maisons anciennes bâties sur les blocs rocheux dominant la vallée de l'Asinao."
 },
 {
   n:'Aiguilles de Bavella', cat:'mont', lat:41.809544, lng:9.212935,
   pid:'ChIJq9UnM0CK2RIRWNp79DDUq-Q',
-  trajet:'50 km, environ 1 h 05', acces:'Parking payant au col, plein dès 10 h 30',
-  img:'Aiguilles Bavella.JPG',
-  cap:'Aiguilles de Bavella, Wikimedia Commons, CC BY-SA',
+  trajet:'50 km · 1 h 05', acces:'Parking payant au col, plein dès 10 h 30',
+  img:'img/bavella.jpg',
+  cap:'Photo MONNIER Briac, CC BY-SA 3.0, Wikimedia Commons',
+  capUrl:'https://commons.wikimedia.org/wiki/File:Aiguilles Bavella.JPG',
   d:"Le morceau le plus spectaculaire de la carte : sept tours de granite rouge à 1 218 m d'altitude, pins tordus par le vent, grandes parois d'escalade. Deux boucles au départ du col, environ 2 h chacune : le sentier rouge est accessible à tous, le sentier vert grimpe raide et demande un peu de gaz et de l'aisance sur le rocher. Le GR20 et sa variante alpine passent par là. Partir tôt : le parking sature vers 10 h 30 et la chaleur monte vite. Eau et bonnes chaussures obligatoires."
 },
 {
   n:'Levie', cat:'mont', lat:41.702751, lng:9.123025,
   pid:'ChIJO8_UR6Mo2hIRJlWCvU8f-0k',
-  trajet:'45 km, environ 55 min', acces:'Village, site archéologique à 4 km',
+  trajet:'45 km · 55 min', acces:'Village, site archéologique à 4 km',
+  img:'img/levie.jpg',
+  cap:'Photo Jean-Pol GRANDMONT, CC BY 3.0, Wikimedia Commons',
+  capUrl:'https://commons.wikimedia.org/wiki/File:Cucuruzzu JPG2.jpg',
   d:"Le versant culturel de l'Alta Rocca. Le village abrite le musée départemental, et surtout le site archéologique de Cucuruzzu et Capula à quelques kilomètres : castellu de l'âge du bronze et site médiéval, dans une chênaie, parcours d'environ 1 h 30. C'est aussi le pays de la charcuterie corse et du fromage, bonne étape déjeuner sur la boucle montagne."
 }
 ];
 
-/* Ordre de la boucle montagne, utilisé pour l'affichage groupé */
 const ORDER = ['base','sud','nord','boni','mont'];
 
 const map = L.map('map',{zoomControl:false, attributionControl:true}).setView([41.58,9.26],10);
 L.control.zoom({position:'bottomleft'}).addTo(map);
+
 /* Fond satellite : on voit la couleur de l'eau et la forme des criques */
 const sat = L.layerGroup([
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
@@ -371,7 +470,6 @@ const sat = L.layerGroup([
     maxZoom:19, attribution:'&copy; CARTO'
   })
 ]);
-
 /* Fond plan clair, pour lire les routes et les villages */
 const plan = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
   maxZoom:19, attribution:'&copy; OpenStreetMap, &copy; CARTO'
@@ -379,10 +477,9 @@ const plan = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/
 
 sat.addTo(map);
 let vue = 'sat';
-const vueBtn = document.getElementById('vueToggle');
-vueBtn.onclick = ()=>{
-  if(vue==='sat'){ map.removeLayer(sat); plan.addTo(map); vue='plan'; vueBtn.textContent='Satellite'; }
-  else{ map.removeLayer(plan); sat.addTo(map); vue='sat'; vueBtn.textContent='Plan'; }
+document.getElementById('vueToggle').onclick = ()=>{
+  if(vue==='sat'){ map.removeLayer(sat); plan.addTo(map); vue='plan'; }
+  else{ map.removeLayer(plan); sat.addTo(map); vue='sat'; }
 };
 
 const markers = {};
@@ -390,13 +487,16 @@ let active = null;
 const state = new Set(ORDER);
 
 SPOTS.forEach((s,i)=>{
-  const c = CATS[s.cat].color;
+  const hex = CATS[s.cat].hex;
+  const inner = s.img
+    ? `<div class="ph" style="--c:${hex};background-image:url('${s.img}')"></div>`
+    : `<div class="ph" style="--c:${hex}">${s.n[0]}</div>`;
   const icon = L.divIcon({
-    className:'', iconSize:[26,26], iconAnchor:[13,26],
-    html:`<div class="pin" style="background:${c}"><b>${i+1}</b></div>`
+    className:'', iconSize:[44,44], iconAnchor:[22,22],
+    html:`<div class="step" id="step${i}">${inner}<span class="num">${i+1}</span></div>`
   });
   const m = L.marker([s.lat,s.lng],{icon, title:s.n}).addTo(map);
-  m.on('click',()=>open(i));
+  m.on('click',()=>{ select(i,{scroll:true}); });
   markers[i]=m;
 });
 
@@ -405,16 +505,78 @@ const fEl = document.getElementById('filters');
 ORDER.forEach(k=>{
   const b = document.createElement('button');
   b.className='chip on';
-  b.style.background=CATS[k].color;
+  b.style.setProperty('--c',CATS[k].hex);
   b.dataset.k=k;
   b.innerHTML=`<span class="dot"></span>${CATS[k].label}`;
   b.onclick=()=>{
-    if(state.has(k)){state.delete(k); b.classList.remove('on'); b.style.background=''; b.style.color=CATS[k].color;}
-    else{state.add(k); b.classList.add('on'); b.style.background=CATS[k].color; b.style.color='';}
+    if(state.has(k)){state.delete(k); b.classList.remove('on');}
+    else{state.add(k); b.classList.add('on');}
     render();
   };
   fEl.appendChild(b);
 });
+
+/* ---------- Carrousel ---------- */
+const cardsEl = document.getElementById('cards');
+let scrollLock = false;  /* évite la boucle scroll <-> select */
+
+function buildCards(){
+  const visible = SPOTS.map((s,i)=>i).filter(i=>state.has(SPOTS[i].cat));
+  cardsEl.innerHTML = visible.map(i=>{
+    const s=SPOTS[i], hex=CATS[s.cat].hex;
+    const im = s.img
+      ? `<div class="im" style="--c:${hex};background-image:url('${s.img}')">`
+      : `<div class="im noph" style="--c:${hex}"><b>${s.n[0]}</b>`;
+    return `<div class="card" data-i="${i}" id="card${i}">
+      ${im}<span class="badge"><i></i>${CATS[s.cat].label}</span></div>
+      <div class="tx"><div class="nm">${i+1}. ${s.n}</div><div class="mt">${s.trajet} · ${s.acces}</div></div>
+    </div>`;
+  }).join('');
+  cardsEl.querySelectorAll('.card').forEach(c=>{
+    c.onclick=()=>{
+      const i=parseInt(c.dataset.i);
+      if(active===i){ open(i); }
+      else{ select(i,{scroll:true}); }
+    };
+  });
+}
+
+/* Sélection = carte mise en avant + marqueur agrandi + recentrage doux */
+function select(i,{scroll=false,fly=true}={}){
+  active=i;
+  document.querySelectorAll('.step.active').forEach(p=>p.classList.remove('active'));
+  const st=document.getElementById('step'+i); if(st) st.classList.add('active');
+  document.querySelectorAll('.card.sel').forEach(c=>c.classList.remove('sel'));
+  const cd=document.getElementById('card'+i); if(cd) cd.classList.add('sel');
+  if(scroll && cd){
+    scrollLock=true;
+    cd.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+    setTimeout(()=>scrollLock=false,650);
+  }
+  if(fly){
+    const s=SPOTS[i];
+    map.flyTo([s.lat,s.lng], Math.max(map.getZoom(),12), {duration:.55});
+  }
+}
+
+/* Swipe du carrousel -> sélectionne la carte centrée */
+let scrollT;
+cardsEl.addEventListener('scroll',()=>{
+  if(scrollLock) return;
+  clearTimeout(scrollT);
+  scrollT=setTimeout(()=>{
+    const mid=cardsEl.scrollLeft + cardsEl.clientWidth/2;
+    let best=null, bd=1e9;
+    cardsEl.querySelectorAll('.card').forEach(c=>{
+      const d=Math.abs(c.offsetLeft + c.offsetWidth/2 - mid);
+      if(d<bd){bd=d;best=c;}
+    });
+    if(best){
+      const i=parseInt(best.dataset.i);
+      if(i!==active) select(i,{scroll:false});
+    }
+  },120);
+},{passive:true});
 
 function render(){
   let n=0;
@@ -422,28 +584,33 @@ function render(){
     if(state.has(s.cat)){ markers[i].addTo(map); n++; }
     else{ map.removeLayer(markers[i]); }
   });
-  document.getElementById('counter').textContent = n + (n>1?' spots':' spot') + ', base Porto-Vecchio';
+  document.getElementById('counter').textContent = n + (n>1?' spots':' spot') + ' · base Porto-Vecchio';
+  if(active!==null && !state.has(SPOTS[active].cat)) active=null;
+  buildCards();
+  if(active!==null) select(active,{scroll:true,fly:false});
   buildList();
 }
 
-/* ---------- Fiche ---------- */
+/* ---------- Fiche détaillée ---------- */
 const sheet=document.getElementById('sheet');
 const body=document.getElementById('sheetBody');
 
 function open(i){
-  const s=SPOTS[i], c=CATS[s.cat].color;
+  const s=SPOTS[i], hex=CATS[s.cat].hex;
   const gps=`${s.lat.toFixed(5)}, ${s.lng.toFixed(5)}`;
   const dir=`https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}&destination_place_id=${s.pid}`;
   const gm=`https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}&query_place_id=${s.pid}`;
   const photo = s.img
-    ? `<img class="photo" src="${F(s.img)}" alt="${s.n}" loading="lazy"
-         onerror="this.style.display='none';this.nextElementSibling.style.display='none'">
-       <a class="credit" href="${FP(s.img)}" target="_blank" rel="noopener">${s.cap}</a>`
-    : '';
+    ? `<img class="photo" src="${s.img}" alt="${s.n}">
+       <a class="credit" href="${s.capUrl}" target="_blank" rel="noopener">${s.cap}</a>`
+    : `<div class="nophoto" style="--c:${hex}">
+         <span class="nophoto-big">${s.n[0]}</span>
+         <span class="nophoto-txt">Crique sauvage · pas de photo libre de droits</span>
+       </div>`;
 
   body.innerHTML = `
     ${photo}
-    <div class="eyebrow"><span class="dot" style="background:${c}"></span>${CATS[s.cat].label} · N°${i+1}</div>
+    <div class="eyebrow"><span class="dot" style="background:${hex}"></span>${CATS[s.cat].label} · N°${i+1}</div>
     <h2 class="name">${s.n}</h2>
     <p class="desc">${s.d}</p>
     <dl class="facts">
@@ -461,60 +628,57 @@ function open(i){
 
   document.getElementById('copyBtn').onclick=(e)=>{
     navigator.clipboard.writeText(gps).then(()=>{
-      e.target.textContent='Copié'; setTimeout(()=>e.target.textContent='Copier',1400);
+      e.target.textContent='Copié !'; setTimeout(()=>e.target.textContent='Copier',1400);
     }).catch(()=>{e.target.textContent='Échec';});
   };
 
-  document.querySelectorAll('.pin.active').forEach(p=>p.classList.remove('active'));
-  const el = markers[i].getElement();
-  if(el) el.querySelector('.pin').classList.add('active');
-
+  select(i,{scroll:true,fly:false});
   sheet.classList.add('open');
   body.scrollTop=0;
-  active=i;
   document.getElementById('list').classList.remove('open');
-  document.getElementById('listToggle').textContent='Liste';
 
   const off = window.innerWidth>=820 ? [0.15,0] : [0,-0.045];
   map.flyTo([s.lat+off[1], s.lng+off[0]], Math.max(map.getZoom(),13), {duration:.6});
 }
 
-function close(){
+function closeSheet(){
   sheet.classList.remove('open');
-  document.querySelectorAll('.pin.active').forEach(p=>p.classList.remove('active'));
-  active=null;
 }
-document.getElementById('closeSheet').onclick=close;
-map.on('click',close);
-document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+document.getElementById('closeSheet').onclick=closeSheet;
+map.on('click',closeSheet);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();document.getElementById('list').classList.remove('open');}});
 
-/* ---------- Liste ---------- */
+/* ---------- Liste (timeline) ---------- */
 const listEl=document.getElementById('list');
 function buildList(){
   let h='';
   ORDER.forEach(k=>{
     const items=SPOTS.map((s,i)=>({s,i})).filter(o=>o.s.cat===k && state.has(k));
     if(!items.length) return;
-    h+=`<div class="grp" style="color:${CATS[k].color}">${CATS[k].label}</div>`;
+    h+=`<div class="grp" style="color:${CATS[k].hex}">${CATS[k].label}</div>`;
     items.forEach(({s,i})=>{
+      const th = s.img
+        ? `<span class="th" style="--c:${CATS[k].hex};background-image:url('${s.img}')"></span>`
+        : `<span class="th" style="--c:${CATS[k].hex}">${s.n[0]}</span>`;
       h+=`<div class="row" data-i="${i}">
-            <span class="bar" style="background:${CATS[s.cat].color}"></span>
-            <span class="txt"><span class="rn">${s.n}</span><span class="rd">${s.trajet}</span></span>
-            <span class="num">${String(i+1).padStart(2,'0')}</span>
+            ${th}
+            <span class="txt"><span class="rn">${s.n}</span><br><span class="rd">${s.trajet}</span></span>
+            <span class="num">N°${String(i+1).padStart(2,'0')}</span>
           </div>`;
     });
   });
-  listEl.innerHTML=h||'<div class="grp">Aucun spot affiché, réactive un filtre.</div>';
+  h = h || '<div class="grp">Aucun spot affiché, réactive un filtre.</div>';
+  h += `<p class="list-note">Photos : Wikimedia Commons et Flickr, sous licences Creative Commons ou domaine public.
+        L'auteur et la licence de chaque photo sont indiqués sur la fiche du spot.</p>`;
+  listEl.innerHTML=h;
   listEl.querySelectorAll('.row').forEach(r=>{
-    r.onclick=()=>{open(parseInt(r.dataset.i));};
+    r.onclick=()=>{listEl.classList.remove('open');open(parseInt(r.dataset.i));};
   });
 }
 
-const lt=document.getElementById('listToggle');
-lt.onclick=()=>{
+document.getElementById('listToggle').onclick=()=>{
   const o=listEl.classList.toggle('open');
-  lt.textContent=o?'Carte':'Liste';
-  if(o) close();
+  if(o) closeSheet();
 };
 
 render();
