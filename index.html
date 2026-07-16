@@ -240,6 +240,63 @@
   .row .num{font-size:11px;font-weight:800;color:#B9C4CC}
   .list-note{font-size:10.5px;font-weight:600;color:#98A6B0;margin-top:26px;line-height:1.5}
 
+  /* ---------- À découvrir (bonus) ---------- */
+  .disco-btn{
+    position:absolute;z-index:1000;left:12px;
+    bottom:calc(env(safe-area-inset-bottom) + 210px);
+    border:0;cursor:pointer;
+    background:var(--corail);color:#fff;
+    font-family:'Nunito',sans-serif;font-size:12.5px;font-weight:800;
+    padding:11px 15px;border-radius:999px;
+    display:flex;align-items:center;gap:7px;
+    box-shadow:0 6px 18px rgba(255,83,36,.4);
+  }
+  .disco-btn svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .disco-btn:active{transform:scale(.96)}
+  /* Au-dessus des boutons flottants (1150) : cet écran a son propre bouton de fermeture */
+  .disco{
+    position:absolute;z-index:1160;inset:0;background:var(--blanc);
+    overflow-y:auto;display:none;
+    padding:0 16px calc(env(safe-area-inset-bottom) + 30px);
+  }
+  .disco.open{display:block}
+  .disco-head{
+    position:sticky;top:0;z-index:2;background:var(--blanc);
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:calc(env(safe-area-inset-top) + 16px) 0 10px;
+    border-bottom:1px solid #EDF1F4;
+  }
+  .disco-title{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .disco-title span{color:var(--corail)}
+  .disco-sub{font-size:11.5px;font-weight:700;color:var(--encre-2);margin-top:1px}
+  .disco-close{
+    width:32px;height:32px;border-radius:50%;border:0;cursor:pointer;flex:0 0 auto;
+    background:var(--brume);color:var(--encre-2);font-size:17px;line-height:1;font-weight:700;
+  }
+  .dgrp{
+    font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    margin:22px 0 8px;display:flex;align-items:center;gap:8px;
+  }
+  .dgrp::after{content:'';flex:1;height:1px;background:#EDF1F4}
+  .ditem{
+    display:flex;align-items:flex-start;gap:12px;padding:11px 2px;
+    border-radius:14px;text-decoration:none;color:var(--encre);
+  }
+  .ditem:hover{background:var(--brume)}
+  .ditem .ic{
+    width:44px;height:44px;border-radius:13px;flex:0 0 auto;
+    background:var(--brume);font-size:21px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .ditem .dt{flex:1;min-width:0}
+  .ditem .dn{display:block;font-size:14.5px;font-weight:800}
+  .ditem .dn small{font-weight:700;color:var(--encre-2);font-size:11px;margin-left:5px}
+  .ditem .dd{display:block;font-size:12.5px;font-weight:600;color:#51616C;line-height:1.45;margin-top:2px}
+  .ditem .go{
+    flex:0 0 auto;align-self:center;color:#B9C4CC;font-size:16px;font-weight:800;
+  }
+  .disco-note{font-size:10.5px;font-weight:600;color:#98A6B0;margin-top:24px;line-height:1.5}
+
   .leaflet-container{background:#CBD8DF;font-family:'Nunito',sans-serif}
   .leaflet-control-attribution{font-size:9px;background:rgba(255,255,255,.75);color:#7C8B95;border-radius:8px 0 0 0}
   .leaflet-control-attribution a{color:var(--corail-fonce)}
@@ -283,8 +340,23 @@
   </button>
 </div>
 
+<button class="disco-btn" id="discoBtn">
+  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+  Autres spots à découvrir
+</button>
+
 <div class="cards" id="cards"></div>
 <div class="list" id="list"></div>
+<div class="disco" id="disco">
+  <div class="disco-head">
+    <div>
+      <div class="disco-title">À <span>découvrir</span></div>
+      <div class="disco-sub">La sélection bonus autour de Porto-Vecchio</div>
+    </div>
+    <button class="disco-close" id="closeDisco" aria-label="Fermer">&times;</button>
+  </div>
+  <div id="discoBody"></div>
+</div>
 
 <div class="sheet" id="sheet" role="dialog" aria-modal="false">
   <button class="close" id="closeSheet" aria-label="Fermer la fiche">&times;</button>
@@ -649,7 +721,7 @@ function closeSheet(){
 }
 document.getElementById('closeSheet').onclick=closeSheet;
 map.on('click',closeSheet);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();document.getElementById('list').classList.remove('open');}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();document.getElementById('list').classList.remove('open');document.getElementById('disco').classList.remove('open');}});
 
 /* ---------- Liste (timeline) ---------- */
 const listEl=document.getElementById('list');
@@ -681,8 +753,88 @@ function buildList(){
 
 document.getElementById('listToggle').onclick=()=>{
   const o=listEl.classList.toggle('open');
-  if(o) closeSheet();
+  if(o){ closeSheet(); discoEl.classList.remove('open'); }
 };
+
+/* ---------- À découvrir (sélection bonus) ---------- */
+const EXTRAS = [
+{
+  cat:'Restos qui valent le détour', emoji:'🍴', hex:'#C0563F',
+  items:[
+    {n:"L'Orriu / A Cantina di l'Orriu", w:'Porto-Vecchio', q:"Cantina di l'Orriu Porto-Vecchio",
+     d:"L'institution de la vieille ville : cave à manger, planches de charcuterie et fromages corses, vins locaux. Réserver en été."},
+    {n:'Kissing Pigs', w:'Bonifacio', q:'Kissing Pigs Bonifacio',
+     d:"Sur le quai de la marine : charcuterie, fromages et fondues. La valeur sûre après la visite de la ville haute."},
+    {n:'A Pignata', w:'Levie', q:'A Pignata Levie',
+     d:"La ferme-auberge mythique de l'Alta Rocca : menu unique avec les produits de la ferme. Réservation indispensable. Parfaite après Cucuruzzu ou Bavella."},
+    {n:'Chez Marco', w:'Tizzano · 1 h 15', q:'Chez Marco Tizzano',
+     d:"La langouste les pieds dans l'eau, adresse culte de la côte ouest. C'est loin et ce n'est pas donné, mais ça se combine avec une journée Sartène-Tizzano."},
+  ]
+},
+{
+  cat:'Sauts, rivières et vasques', emoji:'💦', hex:'#3E8CC7',
+  items:[
+    {n:'Piscines naturelles du Cavu', w:'20 min au nord', q:'Piscines naturelles du Cavu',
+     d:"Vasques d'eau douce transparentes, dalles de granite, petits sauts et toboggans naturels. Parfait l'après-midi quand les plages débordent. Parking payant l'été."},
+    {n:"Piscines de l'Osu", w:'15 min', q:"piscine naturelle de l'Oso Porto-Vecchio",
+     d:"Le plan B tranquille : vasques et rochers lisses le long de la rivière, accès facile et gratuit. Eau plus fraîche que la mer."},
+    {n:'Cascades de Polischellu', w:'route de Bavella', q:'cascades de Polischellu Bavella',
+     d:"Enchaînement de vasques et de petits sauts en accès libre le long de la D268. Ambiance canyon sans guide — prudence, ça glisse."},
+    {n:'Canyon de Purcaraccia', w:'Bavella', q:'canyon de Purcaraccia Quenza',
+     d:"LE spot mythique : toboggans naturels géants, rappels et sauts sous les aiguilles. À faire encadré (sorties guidées, à réserver). Marche d'approche 45 min."},
+  ]
+},
+{
+  cat:'Encore des plages', emoji:'🏖️', hex:'#12A5A0',
+  items:[
+    {n:'Fautea', w:'25 min au nord', q:'plage de Fautea',
+     d:"Une crique sous une tour génoise, moins courue que ses voisines. Bon snorkeling au pied de la tour."},
+    {n:'Balistra', w:'30 min au sud', q:'plage de Balistra Bonifacio',
+     d:"Grande plage sauvage avec son étang derrière, zéro service et une piste défoncée à la fin — c'est le prix de la tranquillité."},
+    {n:"Golfe de Sant'Amanza", w:'Bonifacio', q:"plage de Maora Sant'Amanza Bonifacio",
+     d:"Eau calme et peu profonde, paillotes, parfait pour le paddle. Moins spectaculaire que Rondinara, mais rarement blindé."},
+    {n:'Grand Sperone', w:'+10 min après le Petit', q:'plage du Grand Sperone Bonifacio',
+     d:"Le grand frère du Petit Sperone : 10 minutes de marche en plus, deux fois moins de monde, eau tout aussi folle."},
+  ]
+},
+{
+  cat:'Activités de fou entre potes', emoji:'🚤', hex:'#E0A02C',
+  items:[
+    {n:'Journée bateau aux Lavezzi', w:'depuis Bonifacio', q:'excursion îles Lavezzi Bonifacio',
+     d:"Réserve naturelle, criques blanches et snorkeling avec les mérous. LA sortie à ne pas rater — réserver la veille en août."},
+    {n:'Location de bateau sans permis', w:'PV, Santa Giulia, Pinarello', q:'location bateau sans permis Porto-Vecchio',
+     d:"Cap sur les îles Cerbicale entre potes, sans permis pour les 6 CV. Partir le matin pour la mer d'huile, mouiller dans une crique, pique-nique à bord."},
+    {n:'Canyoning de la Vacca', w:'Bavella', q:'canyon de la Vacca Bavella',
+     d:"Sauts jusqu'à 8 m, toboggans et rappels dans les gorges, encadrement pro. Sensations garanties, aucun niveau requis à part savoir nager."},
+    {n:'Xtrem Sud', w:"forêt de l'Ospedale", q:'Xtrem Sud Ospedale',
+     d:"Accrobranche au-dessus du lac de l'Ospedale et tyroliennes géantes dans les pins laricio. Au frais à 900 m quand la côte cuit."},
+    {n:'Baptême de plongée aux Cerbicale', w:'clubs à Porto-Vecchio', q:'club plongée Porto-Vecchio',
+     d:"Eau claire, sars, murènes et gorgones autour des îles Cerbicale. Baptême accessible sans aucune expérience, dès le premier jour."},
+  ]
+}
+];
+
+const discoEl = document.getElementById('disco');
+document.getElementById('discoBody').innerHTML = EXTRAS.map(g=>`
+  <div class="dgrp" style="color:${g.hex}">${g.emoji}&nbsp; ${g.cat}</div>
+  ${g.items.map(it=>`
+    <a class="ditem" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(it.q)}" target="_blank" rel="noopener">
+      <span class="ic">${g.emoji}</span>
+      <span class="dt">
+        <span class="dn">${it.n}<small>${it.w}</small></span>
+        <span class="dd">${it.d}</span>
+      </span>
+      <span class="go">›</span>
+    </a>`).join('')}
+`).join('') + `<p class="disco-note">Sélection indicative : horaires, prix et conditions à vérifier sur place,
+  surtout hors saison. Chaque ligne ouvre la recherche Google Maps correspondante.</p>`;
+
+document.getElementById('discoBtn').onclick=()=>{
+  closeSheet();
+  listEl.classList.remove('open');
+  discoEl.classList.add('open');
+};
+document.getElementById('closeDisco').onclick=()=>discoEl.classList.remove('open');
 
 render();
 map.fitBounds(SPOTS.map(s=>[s.lat,s.lng]),{padding:[70,70]});
