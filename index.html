@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#EEF3F6">
 <meta name="description" content="Carte interactive des spots de Corse du Sud : plages, montagne, restos et activités autour de Porto-Vecchio.">
 <title>Corse du Sud, les spots</title>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🏖️</text></svg>'>
 <link rel="preconnect" href="https://server.arcgisonline.com" crossorigin>
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin>
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -16,18 +17,21 @@
 <style>
   :root{
     --encre:#16232C;
-    --encre-2:#4E6070;
+    --encre-2:#3A4B59;
     --corail:#FF5324;
     --corail-fonce:#E64514;
+    --corail-btn:#C8400F;   /* fond des boutons pleins : blanc lisible dessus (≥4.5:1) */
+    --corail-txt:#B93A0E;   /* corail assez foncé pour du texte sur verre clair */
     --base:#E0A02C;
     --sud:#12A5A0;
     --nord:#3E8CC7;
     --boni:#C0563F;
     --pin:#43704E;
     /* Liquid glass */
-    --glass:rgba(255,255,255,.62);
-    --glass-fort:rgba(255,255,255,.74);
-    --glass-voile:rgba(244,248,250,.72);
+    /* Opacités ≥ .72 pour garder le contraste du texte au-dessus de la mer sombre */
+    --glass:rgba(255,255,255,.72);
+    --glass-fort:rgba(255,255,255,.86);
+    --glass-voile:rgba(244,248,250,.9);
     --stroke:rgba(255,255,255,.65);
     --tint:rgba(84,110,128,.10);
     --ombre:0 10px 32px rgba(9,30,44,.22);
@@ -35,6 +39,7 @@
     --reflet:inset 0 1px 0 rgba(255,255,255,.75);
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  button,a,.card,.row{touch-action:manipulation}
   html,body{height:100%}
   html{-webkit-text-size-adjust:100%}
   body{
@@ -75,24 +80,29 @@
   .sub{font-size:11px;font-weight:700;color:var(--encre-2);margin-top:1px}
 
   /* ---------- Filtres ---------- */
+  /* pointer-events:none sur la bande, auto sur les puces : la carte reste
+     cliquable à droite du dernier filtre */
   .filters{
     position:absolute;z-index:1000;left:0;right:0;
     top:calc(env(safe-area-inset-top) + 80px);
     display:flex;gap:8px;overflow-x:auto;padding:4px 12px 10px;
     scrollbar-width:none;overscroll-behavior-x:contain;
+    pointer-events:none;
   }
+  .chip{pointer-events:auto}
   .filters::-webkit-scrollbar{display:none}
   .chip{
     flex:0 0 auto;cursor:pointer;
     color:var(--encre-2);
-    min-height:38px;padding:8px 14px;border-radius:999px;
+    min-height:44px;padding:8px 14px;border-radius:999px;
     font-family:'Nunito',sans-serif;
     font-size:12px;font-weight:800;
     display:flex;align-items:center;gap:7px;
     transition:background .18s, color .18s;
   }
   .chip .dot{width:8px;height:8px;border-radius:50%;background:var(--c)}
-  .chip.on{background:var(--c);background:color-mix(in srgb,var(--c) 88%,transparent);color:#fff;border-color:color-mix(in srgb,var(--c) 60%,white)}
+  /* Teinte assombrie pour garder le blanc lisible (contraste ≥ 4.5:1) */
+  .chip.on{background:var(--c);background:color-mix(in srgb,var(--c) 62%,#16232C);color:#fff;border-color:color-mix(in srgb,var(--c) 60%,white)}
   .chip.on .dot{background:#fff}
   .chip:focus-visible{outline:2px solid var(--corail);outline-offset:2px}
 
@@ -108,7 +118,7 @@
   .step .num{
     position:absolute;top:-4px;right:-4px;
     min-width:18px;height:18px;padding:0 4px;border-radius:9px;
-    background:var(--corail);border:2px solid rgba(255,255,255,.95);
+    background:var(--corail-btn);border:2px solid rgba(255,255,255,.95);
     color:#fff;font-size:10px;font-weight:800;
     display:flex;align-items:center;justify-content:center;
   }
@@ -116,6 +126,8 @@
   .step.active .ph{border-color:var(--corail)}
 
   /* ---------- Carrousel de cartes ---------- */
+  /* La bande laisse passer les taps vers la carte et le zoom dans les
+     gouttières vides ; seules les cartes elles-mêmes sont interactives */
   .cards{
     position:absolute;z-index:1000;left:0;right:0;
     bottom:calc(env(safe-area-inset-bottom) + 12px);
@@ -123,7 +135,9 @@
     padding:14px calc(50vw - 125px) 8px;
     scroll-snap-type:x mandatory;scrollbar-width:none;
     overscroll-behavior-x:contain;
+    pointer-events:none;
   }
+  .card{pointer-events:auto}
   .cards::-webkit-scrollbar{display:none}
   .card{
     flex:0 0 250px;scroll-snap-align:center;cursor:pointer;
@@ -175,7 +189,7 @@
     position:absolute;z-index:1000;left:12px;
     bottom:calc(env(safe-area-inset-bottom) + 214px);
     border:1px solid rgba(255,255,255,.45);cursor:pointer;
-    background:color-mix(in srgb,var(--corail) 88%,transparent);
+    background:color-mix(in srgb,var(--corail-btn) 94%,transparent);
     -webkit-backdrop-filter:blur(14px) saturate(1.6);
     backdrop-filter:blur(14px) saturate(1.6);
     color:#fff;
@@ -197,19 +211,21 @@
     border-radius:26px 26px 0 0;
     box-shadow:var(--reflet), 0 -14px 48px rgba(9,30,44,.3);
     transform:translateY(103%);
-    transition:transform .32s cubic-bezier(.22,1,.36,1);
+    /* visibility différée : fiche fermée = hors tabulation et lecteurs d'écran */
+    visibility:hidden;
+    transition:transform .32s cubic-bezier(.22,1,.36,1), visibility 0s linear .32s;
     max-height:86vh;max-height:86dvh;
     display:flex;flex-direction:column;
     will-change:transform;
   }
-  .sheet.open{transform:translateY(0)}
+  .sheet.open{transform:translateY(0);visibility:visible;transition:transform .32s cubic-bezier(.22,1,.36,1)}
   .grip{padding:10px 0 4px;display:flex;justify-content:center;flex:0 0 auto}
   .grip i{width:40px;height:5px;border-radius:3px;background:rgba(78,96,112,.3);display:block}
   .sheet-body{overflow-y:auto;padding:6px 18px calc(env(safe-area-inset-bottom) + 18px);-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
   .close{
-    position:absolute;top:12px;right:14px;z-index:2;
-    width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.5);cursor:pointer;
-    background:var(--tint);color:var(--encre-2);font-size:18px;line-height:1;font-weight:700;
+    position:absolute;top:10px;right:12px;z-index:2;
+    width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.5);cursor:pointer;
+    background:var(--tint);color:var(--encre-2);font-size:19px;line-height:1;font-weight:700;
   }
   .photo{
     width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:18px;
@@ -225,8 +241,8 @@
   .nophoto-big{font-size:34px;font-weight:800;opacity:.9}
   .nophoto-txt{font-size:11px;font-weight:700;opacity:.85}
   .credit{
-    font-size:10px;font-weight:600;color:#7C8C97;
-    margin:6px 2px 0;display:block;text-decoration:none;
+    font-size:10px;font-weight:600;color:#5A6B77;
+    margin:0 2px;padding:8px 0;display:inline-block;text-decoration:none;
   }
   .credit:hover{color:var(--corail)}
   .eyebrow{
@@ -245,11 +261,11 @@
     background:var(--tint);border:1px solid rgba(255,255,255,.5);
     border-radius:16px;padding:11px 13px;margin-bottom:14px;
   }
-  .gps code{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--corail-fonce);letter-spacing:.02em}
+  .gps code{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--corail-txt);letter-spacing:.02em}
   .copy{
     border:1px solid rgba(255,255,255,.6);background:rgba(255,255,255,.7);color:var(--encre);
     font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;
-    min-height:32px;padding:6px 12px;border-radius:10px;cursor:pointer;flex:0 0 auto;
+    min-height:44px;min-width:64px;padding:6px 12px;border-radius:12px;cursor:pointer;flex:0 0 auto;
   }
   .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .btn{
@@ -258,10 +274,10 @@
     font-size:13.5px;font-weight:800;
   }
   .btn-go{
-    background:var(--corail);color:#fff;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.35), 0 8px 20px rgba(255,83,36,.4);
+    background:var(--corail-btn);color:#fff;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35), 0 8px 20px rgba(200,64,15,.4);
   }
-  .btn-go:active{background:var(--corail-fonce)}
+  .btn-go:active{background:#A83409}
   .btn-photos{background:var(--tint);border:1px solid rgba(255,255,255,.55);color:var(--encre)}
   .btn:active{opacity:.85}
 
@@ -269,8 +285,8 @@
   .list{
     position:absolute;z-index:1100;inset:0;
     background:var(--glass-voile);
-    -webkit-backdrop-filter:blur(26px) saturate(1.7);
-    backdrop-filter:blur(26px) saturate(1.7);
+    -webkit-backdrop-filter:blur(16px) saturate(1.7);
+    backdrop-filter:blur(16px) saturate(1.7);
     overflow-y:auto;overscroll-behavior:contain;
     padding:calc(env(safe-area-inset-top) + 74px) 16px calc(env(safe-area-inset-bottom) + 30px);
     display:none;
@@ -278,6 +294,7 @@
   .list.open{display:block}
   .grp{
     font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--encre);
     margin:20px 0 6px;display:flex;align-items:center;gap:8px;
   }
   .grp::after{content:'';flex:1;height:1px;background:rgba(78,96,112,.18)}
@@ -296,35 +313,39 @@
   .row .txt{flex:1;min-width:0}
   .row .rn{font-size:15px;font-weight:800}
   .row .rd{font-size:11.5px;font-weight:600;color:var(--encre-2);margin-top:1px}
-  .row .num{font-size:11px;font-weight:800;color:#8DA0AC}
-  .list-note{font-size:10.5px;font-weight:600;color:#7C8C97;margin-top:26px;line-height:1.5}
+  .row .num{font-size:11px;font-weight:800;color:#4E6070}
+  .list-note{font-size:11px;font-weight:600;color:#5A6B77;margin-top:26px;line-height:1.5}
+  .gdot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;display:inline-block}
 
   /* ---------- À découvrir (bonus) ---------- */
   /* Au-dessus des boutons flottants (1150) : cet écran a son propre bouton de fermeture */
   .disco{
     position:absolute;z-index:1160;inset:0;
     background:var(--glass-voile);
-    -webkit-backdrop-filter:blur(26px) saturate(1.7);
-    backdrop-filter:blur(26px) saturate(1.7);
+    -webkit-backdrop-filter:blur(16px) saturate(1.7);
+    backdrop-filter:blur(16px) saturate(1.7);
     overflow-y:auto;overscroll-behavior:contain;display:none;
     padding:0 16px calc(env(safe-area-inset-bottom) + 30px);
   }
   .disco.open{display:block}
   .disco-head{
     position:sticky;top:0;z-index:2;
-    background:linear-gradient(to bottom,rgba(244,248,250,.94) 70%,rgba(244,248,250,0));
+    background:rgba(244,248,250,.92);
+    -webkit-backdrop-filter:blur(16px) saturate(1.6);
+    backdrop-filter:blur(16px) saturate(1.6);
+    margin:0 -16px;padding:calc(env(safe-area-inset-top) + 16px) 16px 12px;
     display:flex;align-items:center;justify-content:space-between;gap:10px;
-    padding:calc(env(safe-area-inset-top) + 16px) 0 12px;
   }
   .disco-title{font-size:21px;font-weight:800;letter-spacing:-.02em}
   .disco-title span{color:var(--corail)}
   .disco-sub{font-size:11.5px;font-weight:700;color:var(--encre-2);margin-top:1px}
   .disco-close{
-    width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.6);cursor:pointer;flex:0 0 auto;
-    background:rgba(255,255,255,.65);color:var(--encre-2);font-size:18px;line-height:1;font-weight:700;
+    width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.6);cursor:pointer;flex:0 0 auto;
+    background:rgba(255,255,255,.65);color:var(--encre-2);font-size:19px;line-height:1;font-weight:700;
   }
   .dgrp{
     font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--encre);
     margin:22px 0 8px;display:flex;align-items:center;gap:8px;
   }
   .dgrp::after{content:'';flex:1;height:1px;background:rgba(78,96,112,.18)}
@@ -343,13 +364,17 @@
   .ditem .dn{display:block;font-size:14.5px;font-weight:800}
   .ditem .dn small{font-weight:700;color:var(--encre-2);font-size:11px;margin-left:5px}
   .ditem .dd{display:block;font-size:12.5px;font-weight:600;color:#41525D;line-height:1.45;margin-top:2px}
-  .ditem .go{flex:0 0 auto;align-self:center;color:#8DA0AC;font-size:16px;font-weight:800}
-  .disco-note{font-size:10.5px;font-weight:600;color:#7C8C97;margin-top:24px;line-height:1.5}
+  .ditem .go{flex:0 0 auto;align-self:center;color:#4E6070;font-size:16px;font-weight:800}
+  .disco-note{font-size:11px;font-weight:600;color:#5A6B77;margin-top:24px;line-height:1.5}
 
   .leaflet-container{background:#C6D4DC;font-family:'Nunito',sans-serif}
+  /* Contrôles remontés au-dessus du carrousel (sinon incliquables dessous) :
+     le zoom encore plus haut pour ne pas croiser le bouton « À découvrir » */
+  .leaflet-bottom.leaflet-left{margin-bottom:calc(env(safe-area-inset-bottom) + 262px)}
+  .leaflet-bottom.leaflet-right{margin-bottom:calc(env(safe-area-inset-bottom) + 196px)}
   .leaflet-control-attribution{
-    font-size:9px;color:#5A6B77;border-radius:10px 0 0 0;
-    background:rgba(255,255,255,.55);
+    font-size:10px;color:#4E6070;border-radius:10px;margin-right:4px;
+    background:rgba(255,255,255,.85);
     -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
   }
   .leaflet-control-attribution a{color:var(--corail-fonce)}
@@ -361,7 +386,9 @@
   }
   .leaflet-bar a:hover{background:rgba(255,255,255,.85)}
 
-  @media (min-width:820px){
+  /* Desktop / tablette paysage — conditionné à la hauteur pour qu'un téléphone
+     en paysage (ex. 844x390) tombe dans la branche paysage ci-dessous */
+  @media (min-width:820px) and (min-height:520px){
     .cards{padding:14px calc(50vw - 135px) 8px}
     .card{flex-basis:270px}
     .sheet{left:auto;right:16px;bottom:16px;width:400px;border-radius:24px;border-bottom:1px solid var(--stroke);
@@ -372,12 +399,49 @@
     .fabs{bottom:calc(env(safe-area-inset-bottom) + 234px)}
     .disco-btn{bottom:calc(env(safe-area-inset-bottom) + 234px)}
     .list,.disco{padding-left:max(16px,calc(50vw - 330px));padding-right:max(16px,calc(50vw - 330px))}
+    /* Fiche ouverte : elle occupe la colonne droite, on décale boutons et carrousel */
+    body.sheet-open .fabs{right:428px}
+    body.sheet-open .leaflet-bottom.leaflet-right{margin-right:416px}
   }
-  /* Écrans très étroits : libeller plus court géré côté JS, boutons resserrés */
+  /* Paysage bas (téléphone à l'horizontale) : filtres sur la ligne du titre,
+     boutons en haut, cartes compactes, photo bornée en hauteur */
+  @media (max-height:480px) and (orientation:landscape){
+    .sub{display:none}
+    .brand{padding:8px 12px;border-radius:14px}
+    .filters{top:calc(env(safe-area-inset-top) + 12px);left:150px;right:124px;padding:4px 8px}
+    .fabs{flex-direction:row;bottom:auto;top:calc(env(safe-area-inset-top) + 10px);right:12px;gap:8px}
+    .fab{width:40px;height:40px}
+    .disco-btn{bottom:auto;top:calc(env(safe-area-inset-top) + 74px);min-height:38px;padding:8px 12px;font-size:11.5px}
+    .cards{bottom:calc(env(safe-area-inset-bottom) + 8px)}
+    .card{flex-basis:230px}
+    .card .im{height:64px}
+    .sheet{max-height:94vh;max-height:94dvh}
+    .photo{max-height:34vh;max-height:34dvh}
+    .nophoto{aspect-ratio:auto;min-height:96px}
+    .leaflet-bottom.leaflet-left{margin-bottom:calc(env(safe-area-inset-bottom) + 150px)}
+    .leaflet-bottom.leaflet-right{margin-bottom:calc(env(safe-area-inset-bottom) + 150px)}
+  }
+  /* Écrans très étroits : boutons resserrés */
   @media (max-width:349px){
     .disco-btn{padding:11px 12px;font-size:11.5px}
     .card{flex-basis:220px}
     .cards{padding:14px calc(50vw - 110px) 8px}
+  }
+  /* Petits écrans en portrait (ex. iPhone SE) : on rend de la carte visible */
+  @media (max-height:620px) and (orientation:portrait){
+    .card .im{height:92px}
+    .fabs{bottom:calc(env(safe-area-inset-bottom) + 192px)}
+    .disco-btn{bottom:calc(env(safe-area-inset-bottom) + 192px)}
+    .leaflet-bottom.leaflet-left{margin-bottom:calc(env(safe-area-inset-bottom) + 240px)}
+    .leaflet-bottom.leaflet-right{margin-bottom:calc(env(safe-area-inset-bottom) + 176px)}
+  }
+  /* Retour visuel au survol (souris uniquement) */
+  @media (hover:hover){
+    .chip:not(.on):hover{background:rgba(255,255,255,.9)}
+    .fab:hover{background:var(--glass-fort)}
+    .disco-btn:hover{background:var(--corail-fonce)}
+    .card:hover{transform:translateY(-3px)}
+    .card.sel:hover{transform:translateY(-6px)}
   }
   @media (prefers-reduced-motion:reduce){
     *{transition:none !important;animation:none !important}
@@ -390,8 +454,8 @@
 
 <div class="topbar">
   <div class="brand glass">
-    <div class="title">Corse du <span>Sud</span></div>
-    <div class="sub" id="counter">17 spots · base Porto-Vecchio</div>
+    <h1 class="title">Corse du <span>Sud</span></h1>
+    <div class="sub" id="counter" aria-live="polite">17 spots · base Porto-Vecchio</div>
   </div>
 </div>
 
@@ -424,7 +488,7 @@
   <div id="discoBody"></div>
 </div>
 
-<div class="sheet" id="sheet" role="dialog" aria-modal="false">
+<div class="sheet" id="sheet" role="dialog" aria-modal="false" aria-labelledby="spotName">
   <button class="close" id="closeSheet" aria-label="Fermer la fiche">&times;</button>
   <div class="grip"><i></i></div>
   <div class="sheet-body" id="sheetBody"></div>
@@ -443,6 +507,8 @@ const CATS = {
 /* Photos hébergées dans le dépôt : miniatures (img/thumb/) pour la carte,
    le carrousel et la liste ; pleine taille (img/) uniquement dans la fiche. */
 const T = p => p.replace('img/','img/thumb/');
+/* Respect de prefers-reduced-motion aussi côté JS (flyTo, smooth scroll) */
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const SPOTS = [
 {
@@ -640,7 +706,8 @@ SPOTS.forEach((s,i)=>{
     html:`<div class="step" id="step${i}">${inner}<span class="num">${i+1}</span></div>`
   });
   const m = L.marker([s.lat,s.lng],{icon, title:s.n}).addTo(map);
-  m.on('click',()=>{ select(i,{scroll:true}); });
+  /* 1er clic (ou Entrée) : sélection ; 2e sur le marqueur déjà actif : fiche */
+  m.on('click',()=>{ if(active===i){ open(i); } else { select(i,{scroll:true}); } });
   markers[i]=m;
 });
 
@@ -651,10 +718,12 @@ ORDER.forEach(k=>{
   b.className='chip glass on';
   b.style.setProperty('--c',CATS[k].hex);
   b.dataset.k=k;
+  b.setAttribute('aria-pressed','true');
   b.innerHTML=`<span class="dot"></span>${CATS[k].label}`;
   b.onclick=()=>{
     if(state.has(k)){state.delete(k); b.classList.remove('on');}
     else{state.add(k); b.classList.add('on');}
+    b.setAttribute('aria-pressed', state.has(k) ? 'true' : 'false');
     render();
   };
   fEl.appendChild(b);
@@ -668,7 +737,7 @@ function buildCards(){
   const visible = SPOTS.map((s,i)=>i).filter(i=>state.has(SPOTS[i].cat));
   cardsEl.innerHTML = visible.map(i=>{
     const s=SPOTS[i], hex=CATS[s.cat].hex;
-    return `<div class="card" data-i="${i}" id="card${i}">
+    return `<div class="card" data-i="${i}" id="card${i}" tabindex="0" role="button" aria-label="${s.n}, ouvrir la fiche">
       <div class="im" style="--c:${hex};background-image:url('${T(s.img)}')">
         <span class="badge"><i></i>${CATS[s.cat].label}</span>
       </div>
@@ -676,11 +745,18 @@ function buildCards(){
     </div>`;
   }).join('');
   cardsEl.querySelectorAll('.card').forEach(c=>{
-    c.onclick=()=>{
+    const act=()=>{
       const i=parseInt(c.dataset.i);
       if(active===i){ open(i); }
+      /* Tap rapide pendant le recentrage : la carte a glissé sous le doigt,
+         l'intention était d'ouvrir la carte fraîchement sélectionnée */
+      else if(scrollLock && active!==null){ open(active); }
       else{ select(i,{scroll:true}); }
     };
+    c.onclick=act;
+    c.addEventListener('keydown',e=>{
+      if(e.key==='Enter'||e.key===' '){ e.preventDefault(); act(); }
+    });
   });
 }
 
@@ -694,15 +770,24 @@ function select(i,{scroll=false,fly=true}={}){
   const cd=document.getElementById('card'+i); if(cd) cd.classList.add('sel');
   if(scroll && cd){
     scrollLock=true;
-    cd.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
-    setTimeout(()=>scrollLock=false,650);
+    cd.scrollIntoView({behavior:RM?'auto':'smooth',inline:'center',block:'nearest'});
+    setTimeout(()=>scrollLock=false, RM?80:650);
   }
   const s=SPOTS[i];
   if(s.img){ const pre=new Image(); pre.src=s.img; }
   if(fly){
-    map.flyTo([s.lat,s.lng], Math.max(map.getZoom(),12), {duration:.55});
+    if(RM) map.setView([s.lat,s.lng], Math.max(map.getZoom(),12));
+    else map.flyTo([s.lat,s.lng], Math.max(map.getZoom(),12), {duration:.55});
   }
 }
+
+/* Molette souris : le défilement vertical fait glisser le carrousel */
+cardsEl.addEventListener('wheel',e=>{
+  if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){
+    cardsEl.scrollLeft+=e.deltaY;
+    e.preventDefault();
+  }
+},{passive:false});
 
 /* Swipe du carrousel -> sélectionne la carte centrée */
 let scrollT;
@@ -756,7 +841,7 @@ function open(i){
   body.innerHTML = `
     ${photo}
     <div class="eyebrow"><span class="dot" style="background:${hex}"></span>${CATS[s.cat].label} · N°${i+1}</div>
-    <h2 class="name">${s.n}</h2>
+    <h2 class="name" id="spotName">${s.n}</h2>
     <p class="desc">${s.d}</p>
     <dl class="facts">
       <div class="fact"><dt>Depuis Porto-Vecchio</dt><dd>${s.trajet}</dd></div>
@@ -779,19 +864,60 @@ function open(i){
 
   select(i,{scroll:true,fly:false});
   sheet.classList.add('open');
+  document.body.classList.add('sheet-open');
   body.scrollTop=0;
   document.getElementById('list').classList.remove('open');
   document.getElementById('disco').classList.remove('open');
+  document.getElementById('closeSheet').focus({preventScroll:true});
 
-  const off = window.innerWidth>=820 ? [0.15,0] : [0,-0.045];
-  map.flyTo([s.lat+off[1], s.lng+off[0]], Math.max(map.getZoom(),13), {duration:.6});
+  const desktop = window.innerWidth>=820 && window.innerHeight>=520;
+  const off = desktop ? [0.15,0] : [0,-0.045];
+  const dest=[s.lat+off[1], s.lng+off[0]], z=Math.max(map.getZoom(),13);
+  if(RM) map.setView(dest, z); else map.flyTo(dest, z, {duration:.6});
 }
 
 function closeSheet(){
+  const wasOpen=sheet.classList.contains('open');
   sheet.classList.remove('open');
+  document.body.classList.remove('sheet-open');
+  /* Rendre le focus à la carte active (sinon il reste piégé hors écran) */
+  if(wasOpen && active!==null){
+    const cd=document.getElementById('card'+active);
+    if(cd) cd.focus({preventScroll:true});
+  }
 }
 document.getElementById('closeSheet').onclick=closeSheet;
-map.on('click',closeSheet);
+/* Un tap qui « rate » une carte en mouvement (recentrage en cours) tombe sur la
+   carte géographique à travers la gouttière : s'il est dans la bande du
+   carrousel pendant l'animation, l'intention était d'ouvrir la fiche. */
+map.on('click',(e)=>{
+  const bandTop = cardsEl.getBoundingClientRect().top;
+  if(scrollLock && active!==null && e.containerPoint.y >= bandTop){ open(active); return; }
+  closeSheet();
+});
+
+/* Drag du grip vers le bas = fermeture (l'affordance que le grip promet) */
+{
+  const grip=sheet.querySelector('.grip');
+  let y0=null;
+  grip.addEventListener('touchstart',e=>{
+    y0=e.touches[0].clientY;
+    sheet.style.transition='none';
+  },{passive:true});
+  grip.addEventListener('touchmove',e=>{
+    if(y0===null) return;
+    const dy=Math.max(0, e.touches[0].clientY-y0);
+    sheet.style.transform=`translateY(${dy}px)`;
+  },{passive:true});
+  grip.addEventListener('touchend',e=>{
+    if(y0===null) return;
+    const dy=e.changedTouches[0].clientY-y0;
+    sheet.style.transition='';
+    sheet.style.transform='';
+    if(dy>110) closeSheet();
+    y0=null;
+  });
+}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();document.getElementById('list').classList.remove('open');document.getElementById('disco').classList.remove('open');}});
 
 /* ---------- Liste (timeline) ---------- */
@@ -801,12 +927,12 @@ function buildList(){
   ORDER.forEach(k=>{
     const items=SPOTS.map((s,i)=>({s,i})).filter(o=>o.s.cat===k && state.has(k));
     if(!items.length) return;
-    h+=`<div class="grp" style="color:${CATS[k].hex}">${CATS[k].label}</div>`;
+    h+=`<h2 class="grp"><i class="gdot" style="background:${CATS[k].hex}"></i>${CATS[k].label}</h2>`;
     items.forEach(({s,i})=>{
       const th = s.img
         ? `<span class="th" style="--c:${CATS[k].hex};background-image:url('${T(s.img)}')"></span>`
         : `<span class="th" style="--c:${CATS[k].hex}">${s.n[0]}</span>`;
-      h+=`<div class="row" data-i="${i}">
+      h+=`<div class="row" data-i="${i}" tabindex="0" role="button" aria-label="${s.n}, ouvrir la fiche">
             ${th}
             <span class="txt"><span class="rn">${s.n}</span><br><span class="rd">${s.trajet}</span></span>
             <span class="num">N°${String(i+1).padStart(2,'0')}</span>
@@ -818,7 +944,11 @@ function buildList(){
         L'auteur et la licence de chaque photo sont indiqués sur la fiche du spot.</p>`;
   listEl.innerHTML=h;
   listEl.querySelectorAll('.row').forEach(r=>{
-    r.onclick=()=>{listEl.classList.remove('open');open(parseInt(r.dataset.i));};
+    const act=()=>{listEl.classList.remove('open');open(parseInt(r.dataset.i));};
+    r.onclick=act;
+    r.addEventListener('keydown',e=>{
+      if(e.key==='Enter'||e.key===' '){ e.preventDefault(); act(); }
+    });
   });
 }
 
@@ -887,7 +1017,7 @@ const EXTRAS = [
 
 const discoEl = document.getElementById('disco');
 document.getElementById('discoBody').innerHTML = EXTRAS.map(g=>`
-  <div class="dgrp" style="color:${g.hex}">${g.emoji}&nbsp; ${g.cat}</div>
+  <h2 class="dgrp"><i class="gdot" style="background:${g.hex}"></i>${g.emoji}&nbsp; ${g.cat}</h2>
   ${g.items.map(it=>`
     <a class="ditem" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(it.q)}" target="_blank" rel="noopener">
       <span class="ic">${g.emoji}</span>
