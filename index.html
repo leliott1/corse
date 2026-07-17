@@ -391,12 +391,15 @@
      le zoom encore plus haut pour ne pas croiser le bouton « À découvrir » */
   .leaflet-bottom.leaflet-left{margin-bottom:calc(env(safe-area-inset-bottom) + 262px)}
   .leaflet-bottom.leaflet-right{margin-bottom:calc(env(safe-area-inset-bottom) + 196px)}
-  .leaflet-control-attribution{
-    font-size:10px;color:#4E6070;border-radius:10px;margin-right:4px;
-    background:rgba(255,255,255,.85);
-    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  /* Crédits obligatoires (Esri/CARTO) mais réduits au strict minimum et discrets.
+     Sélecteur .leaflet-container ... pour battre le fond blanc par défaut de Leaflet. */
+  .leaflet-container .leaflet-control-attribution{
+    font-size:9px;line-height:1.3;color:rgba(233,238,242,.55);
+    background:transparent;padding:0 5px;margin:0 3px 1px 0;
+    box-shadow:none;text-shadow:0 1px 2px rgba(0,20,35,.6);
   }
-  .leaflet-control-attribution a{color:var(--corail-fonce)}
+  .leaflet-control-attribution a{color:rgba(233,238,242,.65);text-decoration:none}
+  .leaflet-control-attribution .leaflet-attribution-flag{display:none}
   .leaflet-bar{border:0 !important;box-shadow:var(--ombre-leg) !important;border-radius:14px !important;overflow:hidden}
   .leaflet-bar a{
     background:rgba(255,255,255,.65);color:var(--encre);
@@ -495,6 +498,13 @@
   body[data-mode="sejour"] .topbar,
   body[data-mode="sejour"] #listToggle{display:none}
   body[data-mode="spots"] #sejourUI{display:none}
+  /* Séjour (portrait) : le bouton calques ⧉ file dans le coin bas-droite,
+     juste au-dessus du « + » (plus de bouton flottant au milieu) */
+  @media (orientation:portrait){
+    body[data-mode="sejour"] .fabs{
+      right:16px;top:auto;bottom:calc(env(safe-area-inset-bottom) + 88px);
+    }
+  }
   /* Écrans étroits : bascule compacte, sous-titre masqué pour éviter le chevauchement */
   @media (max-width:389px){ .modes button{padding:8px 11px} .brand .sub{display:none} }
 
@@ -1039,12 +1049,13 @@ const SPOTS = [
 const ORDER = ['base','sud','nord','boni','mont'];
 
 const map = L.map('map',{zoomControl:false, attributionControl:true}).setView([41.58,9.26],10);
+map.attributionControl.setPrefix(false);   // pas de « Leaflet » ni de drapeau
 L.control.zoom({position:'bottomleft'}).addTo(map);
 
 /* Fond satellite : on voit la couleur de l'eau et la forme des criques */
 const sat = L.layerGroup([
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
-    maxZoom:19, attribution:'&copy; Esri, Maxar, Earthstar Geographics'
+    maxZoom:19, attribution:'&copy; Esri'
   }),
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',{
     maxZoom:19, attribution:'&copy; CARTO'
@@ -1052,7 +1063,7 @@ const sat = L.layerGroup([
 ]);
 /* Fond plan clair, pour lire les routes et les villages */
 const plan = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
-  maxZoom:19, attribution:'&copy; OpenStreetMap, &copy; CARTO'
+  maxZoom:19, attribution:'&copy; OSM'
 });
 
 sat.addTo(map);
