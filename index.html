@@ -567,7 +567,7 @@
   }
   .veil-btn:active{transform:scale(.98)}
   .veil-btn[disabled]{opacity:.5;cursor:default;transform:none}
-  .veil-err{min-height:18px;font-size:12px;font-weight:800;color:#E64514;margin-top:10px}
+  .veil-err{min-height:18px;font-size:12px;font-weight:800;color:#C8400F;margin-top:10px}
   .swatches{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:6px 0 4px}
   .swatch{
     width:40px;height:40px;border-radius:50%;cursor:pointer;border:3px solid transparent;
@@ -603,12 +603,12 @@
   .gcard img,.gcard video{width:100%;height:100%;object-fit:cover;display:block;background:#c6d4dc}
   .gcard .who{
     position:absolute;top:6px;left:6px;display:flex;align-items:center;gap:5px;
-    background:rgba(6,18,26,.5);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;max-width:85%;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    background:rgba(6,18,26,.66);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;max-width:85%;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.55);
   }
   .gcard .who i{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
   .gcard .play-ic{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:34px;text-shadow:0 2px 10px rgba(0,0,0,.6);pointer-events:none}
-  .gcard .rc{position:absolute;bottom:6px;right:6px;background:rgba(6,18,26,.5);color:#fff;font-size:10px;font-weight:800;padding:3px 7px;border-radius:999px}
+  .gcard .rc{position:absolute;bottom:6px;right:6px;background:rgba(6,18,26,.66);color:#fff;font-size:10px;font-weight:800;padding:3px 7px;border-radius:999px;text-shadow:0 1px 2px rgba(0,0,0,.55)}
   .gal-note{font-size:11px;font-weight:600;color:#5A6B77;margin:14px 0 2px;line-height:1.5}
 
   /* ============ Visionneuse plein écran ============ */
@@ -632,7 +632,7 @@
   .lb-who{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:800;margin-bottom:4px}
   .lb-who i{width:11px;height:11px;border-radius:50%}
   .lb-who .date{font-weight:600;color:rgba(255,255,255,.6);font-size:11.5px;margin-left:auto}
-  .lb-cap{font-size:14px;font-weight:600;line-height:1.45;color:rgba(255,255,255,.92);min-height:8px}
+  .lb-cap{font-size:14px;font-weight:600;line-height:1.45;color:rgba(255,255,255,.92);min-height:8px;white-space:pre-wrap;overflow-wrap:anywhere}
   .lb-cap[contenteditable="true"]{outline:2px solid var(--corail);border-radius:8px;padding:6px 8px;background:rgba(255,255,255,.08)}
   .lb-actions{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
   .rxbtn{
@@ -799,7 +799,7 @@
 </div>
 
 <!-- Récap « Fin de séjour » -->
-<div class="recap" id="recap">
+<div class="recap" id="recap" role="dialog" aria-modal="true" aria-label="Récapitulatif du séjour">
   <div class="recap-head">
     <div><div class="recap-title">Fin de <span>séjour</span></div></div>
     <button class="disco-close" id="recapClose" aria-label="Fermer">&times;</button>
@@ -1703,7 +1703,7 @@ function galItems(ci){ return clusters[ci].items.slice().sort((a,b)=>new Date(a.
 function galCard(p,i){
   const total=p._rx.length;
   return `<div class="gcard" data-i="${i}">
-    <img src="${pubUrl(p.storage_path)}" loading="lazy" alt="">
+    <img src="${pubUrl(p.storage_path)}" loading="lazy" alt="Photo de ${esc(p.author_name)}">
     <span class="who"><i style="background:${esc(p.author_color)}"></i>${esc(p.author_name)}</span>
     ${p.kind==='video'?'<span class="play-ic">▶</span>':''}
     ${total?`<span class="rc">❤ ${total}</span>`:''}
@@ -1725,15 +1725,16 @@ function openGallery(ci){
 }
 
 /* ---- Visionneuse plein écran ---- */
-let lbItems=[], lbIdx=0, diapoTimer=null;
-function openLightbox(items, idx){ lbItems=items; lbIdx=idx; renderLightbox(); lb.classList.add('open'); }
-function closeLightbox(){ lb.classList.remove('open'); document.getElementById('lbMedia').innerHTML=''; document.getElementById('emojiPop').classList.remove('open'); if(diapoTimer){clearInterval(diapoTimer);diapoTimer=null;} }
+let lbItems=[], lbIdx=0, diapoTimer=null, lbReturnFocus=null;
+function openLightbox(items, idx){ lbReturnFocus=document.activeElement; lbItems=items; lbIdx=idx; renderLightbox(); lb.classList.add('open'); document.getElementById('lbClose').focus({preventScroll:true}); }
+function closeLightbox(){ lb.classList.remove('open'); document.getElementById('lbMedia').innerHTML=''; document.getElementById('emojiPop').classList.remove('open'); if(diapoTimer){clearInterval(diapoTimer);diapoTimer=null;}
+  if(lbReturnFocus && lbReturnFocus.focus){ try{ lbReturnFocus.focus({preventScroll:true}); }catch(_){} } }
 function renderLightbox(){
   const p=lbItems[lbIdx]; if(!p) return;
   const media=document.getElementById('lbMedia');
   media.innerHTML = p.kind==='video'
     ? `<video src="${pubUrl(p.original_path||p.storage_path)}" controls playsinline ${diapoTimer?'':'autoplay'}></video>`
-    : `<img src="${pubUrl(p.storage_path)}" alt="">`;
+    : `<img src="${pubUrl(p.storage_path)}" alt="${p.caption?esc(p.caption):('Photo de '+esc(p.author_name))}">`;
   const mine = p.author===myId;
   const ds = new Date(p.taken_at).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
   const counts={}; p._rx.forEach(r=>counts[r.emoji]=(counts[r.emoji]||0)+1);
@@ -1900,6 +1901,7 @@ async function handleFile(file,n,total){
 document.getElementById('sejAlbum').onclick=async()=>{
   if(!await sejourInit()) return;
   await loadPhotos(); buildRecap(); recap.classList.add('open');
+  document.getElementById('recapClose').focus({preventScroll:true});
 };
 document.getElementById('recapClose').onclick=()=>recap.classList.remove('open');
 function buildRecap(){
@@ -1916,7 +1918,7 @@ function buildRecap(){
     const d=new Date(k+'T12:00:00'); const label=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
     const items=byDay[k].sort((a,b)=>new Date(a.taken_at)-new Date(b.taken_at));
     h+=`<div class="jday">${esc(label)}</div><div class="jgrid">`+
-      items.map((p,i)=>`<div class="gcard" data-k="${k}" data-i="${i}"><img src="${pubUrl(p.storage_path)}" loading="lazy" alt="">${p.kind==='video'?'<span class="play-ic">▶</span>':''}</div>`).join('')+`</div>`;
+      items.map((p,i)=>`<div class="gcard" data-k="${k}" data-i="${i}"><img src="${pubUrl(p.storage_path)}" loading="lazy" alt="Photo de ${esc(p.author_name)}">${p.kind==='video'?'<span class="play-ic">▶</span>':''}</div>`).join('')+`</div>`;
   });
   el.innerHTML=h;
   document.getElementById('recDiapo').onclick=startDiapo;
@@ -1951,8 +1953,16 @@ async function downloadAlbum(){
   }catch(e){ console.warn(e); toast('Téléchargement impossible'); }
 }
 
-/* Échap ferme visionneuse / récap */
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(lb.classList.contains('open')) closeLightbox(); recap.classList.remove('open'); } });
+/* Clavier : Échap ferme ; flèches naviguent dans la visionneuse */
+document.addEventListener('keydown',e=>{
+  if(lb.classList.contains('open')){
+    if(e.key==='Escape'){ closeLightbox(); }
+    else if(e.key==='ArrowLeft'){ lbGo(-1); }
+    else if(e.key==='ArrowRight'){ lbGo(1); }
+    return;
+  }
+  if(e.key==='Escape') recap.classList.remove('open');
+});
 lb.addEventListener('click',e=>{ if(e.target===lb) closeLightbox(); });
 </script>
 </body>
