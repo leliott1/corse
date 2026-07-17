@@ -12,6 +12,9 @@
     <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#28C0B7"/><stop offset="1" stop-color="#0A6A72"/>
     </linearGradient>
+    <linearGradient id="land" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2E6047"/><stop offset="1" stop-color="#1C4433"/>
+    </linearGradient>
     <radialGradient id="sunGlow" cx="0.5" cy="0.5" r="0.5">
       <stop offset="0" stop-color="#FFF3D2" stop-opacity=".95"/>
       <stop offset=".55" stop-color="#FFD98A" stop-opacity=".55"/>
@@ -32,13 +35,31 @@
     <circle cx="256" cy="250" r="128" fill="url(#sunGlow)"/>
     <!-- Soleil -->
     <circle cx="256" cy="252" r="50" fill="#FFF1CE"/>
+
+    <!-- Côte verdoyante au loin (gauche), avec pins parasols -->
+    <g fill="url(#land)">
+      <path d="M106 278 L106 260 Q140 244 178 256 Q198 262 206 278 Z"/>
+      <!-- pins parasols en silhouette sur la crête -->
+      <path d="M128 258 q-9 -1 -14 5 q6 -1 8 1 q-6 1 -9 6 q10 -2 15 1 q4 -3 10 -1 q-4 -5 -9 -5 q3 -2 7 -1 q-6 -6 -15 -6 z"/>
+      <path d="M150 250 q-10 -1 -16 6 q7 -1 9 1 q-7 2 -10 7 q12 -2 17 1 q5 -3 11 -1 q-4 -6 -10 -6 q3 -2 8 -1 q-7 -7 -18 -7 z"/>
+      <path d="M174 256 q-8 -1 -13 5 q6 -1 7 1 q-5 1 -8 5 q9 -2 13 1 q4 -3 9 -1 q-3 -4 -8 -4 q3 -2 6 -1 q-5 -6 -13 -6 z"/>
+    </g>
+
     <!-- Mer -->
     <rect x="106" y="278" width="300" height="128" fill="url(#sea)"/>
     <!-- Reflet du soleil sur l'eau -->
     <rect x="242" y="278" width="28" height="128" fill="#EAF7EC" opacity=".18"/>
+
+    <!-- Petit voilier au loin -->
+    <g>
+      <path d="M310 262 L310 285 L326 285 Z" fill="#FBF1DA"/>
+      <path d="M308 262 L308 285 L296 285 Z" fill="#FBF1DA" opacity=".85"/>
+      <path d="M292 285 q17 9 34 0 l-4 7 q-13 5 -26 0 z" fill="#123B33"/>
+    </g>
+
     <!-- Vagues -->
-    <path d="M106 316 q40 -14 80 0 t80 0 t80 0 t80 0 V406 H106Z" fill="#0C7B7F" opacity=".55"/>
-    <path d="M106 346 q46 14 92 0 t92 0 t92 0 V406 H106Z" fill="#0A5F66" opacity=".7"/>
+    <path d="M106 318 q40 -14 80 0 t80 0 t80 0 t80 0 V406 H106Z" fill="#0C7B7F" opacity=".5"/>
+    <path d="M106 348 q46 14 92 0 t92 0 t92 0 V406 H106Z" fill="#0A5F66" opacity=".7"/>
   </g>
 
   <!-- Anneau -->
