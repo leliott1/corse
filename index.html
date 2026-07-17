@@ -571,6 +571,152 @@
   }
   .swatch.on{border-color:#fff;transform:scale(1.12);box-shadow:0 0 0 2px var(--encre),0 4px 10px rgba(0,0,0,.3)}
   .veil-hint{font-size:11px;font-weight:700;color:#5A6B77;margin-top:12px}
+
+  /* ============ Séjour : marqueurs photos ============ */
+  .pmk{width:54px;height:54px;position:relative;transition:transform .18s}
+  .pmk .thumb{
+    width:54px;height:54px;border-radius:16px;border:3px solid #fff;
+    background:#c6d4dc center/cover no-repeat;box-shadow:0 5px 14px rgba(9,30,44,.5);
+    display:flex;align-items:center;justify-content:center;font-size:22px;
+  }
+  .pmk .cnt{
+    position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;
+    background:var(--corail-btn);border:2px solid #fff;color:#fff;font-size:11px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .pmk .play{position:absolute;left:6px;bottom:6px;color:#fff;font-size:14px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+  .pmk:active{transform:scale(.93)}
+
+  /* ============ Galerie (dans la fiche partagée) ============ */
+  .gal-h{display:flex;align-items:baseline;gap:9px;margin:2px 0 12px;flex-wrap:wrap}
+  .gal-h .gt{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .gal-h .gc{font-size:12px;font-weight:700;color:var(--encre-2)}
+  .gal-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .gcard{
+    border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.5);
+    background:var(--tint);position:relative;cursor:pointer;aspect-ratio:1;
+  }
+  .gcard img,.gcard video{width:100%;height:100%;object-fit:cover;display:block;background:#c6d4dc}
+  .gcard .who{
+    position:absolute;top:6px;left:6px;display:flex;align-items:center;gap:5px;
+    background:rgba(6,18,26,.5);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;max-width:85%;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .gcard .who i{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+  .gcard .play-ic{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:34px;text-shadow:0 2px 10px rgba(0,0,0,.6);pointer-events:none}
+  .gcard .rc{position:absolute;bottom:6px;right:6px;background:rgba(6,18,26,.5);color:#fff;font-size:10px;font-weight:800;padding:3px 7px;border-radius:999px}
+  .gal-note{font-size:11px;font-weight:600;color:#5A6B77;margin:14px 0 2px;line-height:1.5}
+
+  /* ============ Visionneuse plein écran ============ */
+  .lb{position:fixed;inset:0;z-index:2500;background:rgba(6,14,20,.96);display:none;flex-direction:column}
+  .lb.open{display:flex}
+  .lb-media{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:calc(env(safe-area-inset-top) + 8px) 10px 6px;min-height:0}
+  .lb-media img,.lb-media video{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px}
+  .lb-close{
+    position:absolute;top:calc(env(safe-area-inset-top) + 8px);right:12px;z-index:3;
+    width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.25);cursor:pointer;
+    background:rgba(255,255,255,.14);color:#fff;font-size:20px;font-weight:700;backdrop-filter:blur(8px);
+  }
+  .lb-nav{
+    position:absolute;top:50%;transform:translateY(-50%);z-index:2;
+    width:44px;height:44px;border-radius:50%;border:0;cursor:pointer;
+    background:rgba(255,255,255,.14);color:#fff;font-size:22px;font-weight:800;
+  }
+  .lb-nav.prev{left:8px} .lb-nav.next{right:8px}
+  .lb-nav[disabled]{opacity:.25;cursor:default}
+  .lb-bar{padding:10px 16px calc(env(safe-area-inset-bottom) + 14px);color:#fff;flex:0 0 auto}
+  .lb-who{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:800;margin-bottom:4px}
+  .lb-who i{width:11px;height:11px;border-radius:50%}
+  .lb-who .date{font-weight:600;color:rgba(255,255,255,.6);font-size:11.5px;margin-left:auto}
+  .lb-cap{font-size:14px;font-weight:600;line-height:1.45;color:rgba(255,255,255,.92);min-height:8px}
+  .lb-cap[contenteditable="true"]{outline:2px solid var(--corail);border-radius:8px;padding:6px 8px;background:rgba(255,255,255,.08)}
+  .lb-actions{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .rxbtn{
+    border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.1);cursor:pointer;
+    min-height:40px;padding:7px 12px;border-radius:999px;color:#fff;font-size:15px;font-weight:800;
+    display:flex;align-items:center;gap:5px;
+  }
+  .rxbtn.on{background:var(--corail-btn);border-color:transparent}
+  .rxbtn .n{font-size:12px;font-weight:800}
+  .rxbtn.more{font-size:18px}
+  .lb-tools{margin-left:auto;display:flex;gap:8px}
+  .lb-tool{
+    border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.1);cursor:pointer;
+    min-height:40px;min-width:40px;padding:7px 10px;border-radius:12px;color:#fff;font-size:12.5px;font-weight:800;
+  }
+  .lb-tool.del{color:#FFB4A0}
+  /* Sélecteur d'emojis */
+  .emoji-pop{
+    position:absolute;z-index:4;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom) + 78px);
+    background:rgba(20,32,40,.96);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:12px;
+    display:none;grid-template-columns:repeat(8,1fr);gap:6px;
+  }
+  .emoji-pop.open{display:grid}
+  .emoji-pop button{border:0;background:transparent;cursor:pointer;font-size:24px;padding:6px;border-radius:10px}
+  .emoji-pop button:active{background:rgba(255,255,255,.15)}
+
+  /* ============ Upload : progression ============ */
+  .uprog{
+    position:fixed;left:50%;transform:translateX(-50%);z-index:2400;
+    bottom:calc(env(safe-area-inset-bottom) + 92px);
+    padding:12px 16px;border-radius:16px;display:none;align-items:center;gap:12px;min-width:240px;max-width:88vw;
+  }
+  .uprog.open{display:flex}
+  .uprog .txt{font-size:12px;font-weight:800;white-space:nowrap}
+  .uprog .bar{flex:1;height:7px;border-radius:4px;background:rgba(78,96,112,.25);overflow:hidden}
+  .uprog .bar i{display:block;height:100%;width:0;background:var(--corail-btn);transition:width .3s}
+
+  /* ============ Placement manuel ============ */
+  .place{
+    position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 12px);z-index:2400;
+    display:none;align-items:center;gap:11px;padding:11px 13px;border-radius:18px;
+  }
+  .place.open{display:flex}
+  .place img{width:46px;height:46px;border-radius:12px;object-fit:cover;flex:0 0 auto;background:#c6d4dc}
+  .place .pt{flex:1;font-size:12.5px;font-weight:800;line-height:1.35}
+  .place .pt small{display:block;font-weight:600;color:var(--encre-2);margin-top:1px}
+  .place button{
+    flex:0 0 auto;border:0;cursor:pointer;min-height:40px;padding:9px 14px;border-radius:12px;
+    font-family:'Nunito',sans-serif;font-size:12.5px;font-weight:800;
+  }
+  .place .ok{background:var(--corail-btn);color:#fff}
+  .place .no{background:var(--tint);color:var(--encre-2);border:1px solid rgba(255,255,255,.5)}
+  .place-x{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2390;display:none;pointer-events:none;
+    width:40px;height:40px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 3px rgba(200,64,15,.7),0 4px 14px rgba(0,0,0,.4)}
+  .place-x.open{display:block}
+  .place-x::after{content:'';position:absolute;left:50%;top:50%;width:6px;height:6px;border-radius:50%;background:var(--corail);transform:translate(-50%,-50%)}
+
+  /* ============ Fin de séjour (récap) ============ */
+  .recap{
+    position:absolute;z-index:1170;inset:0;background:var(--glass-voile);
+    -webkit-backdrop-filter:blur(16px) saturate(1.7);backdrop-filter:blur(16px) saturate(1.7);
+    overflow-y:auto;overscroll-behavior:contain;display:none;padding:0 16px calc(env(safe-area-inset-bottom) + 30px);
+  }
+  .recap.open{display:block}
+  .recap-head{
+    position:sticky;top:0;z-index:2;background:rgba(244,248,250,.92);
+    -webkit-backdrop-filter:blur(16px) saturate(1.6);backdrop-filter:blur(16px) saturate(1.6);
+    margin:0 -16px;padding:calc(env(safe-area-inset-top) + 16px) 16px 12px;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+  }
+  .recap-title{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .recap-title span{color:var(--corail)}
+  .recap-actions{display:flex;gap:9px;margin:14px 0 4px;flex-wrap:wrap}
+  .recap-btn{
+    flex:1;min-width:130px;min-height:52px;border:1px solid rgba(255,255,255,.5);cursor:pointer;
+    background:var(--glass-fort);border-radius:16px;color:var(--encre);
+    font-family:'Nunito',sans-serif;font-size:13.5px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .recap-btn.primary{background:var(--corail-btn);color:#fff;border-color:transparent}
+  .recap-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .recap-btn:active{transform:scale(.98)}
+  .jday{font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--encre);
+        margin:20px 0 8px;display:flex;align-items:center;gap:8px}
+  .jday::after{content:'';flex:1;height:1px;background:rgba(78,96,112,.18)}
+  .jgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+  .jgrid .gcard{border-radius:13px}
+  .recap-empty{text-align:center;color:#5A6B77;font-size:13px;font-weight:600;margin-top:60px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -648,6 +794,40 @@
   <input type="file" id="sejFile" accept="image/*,video/*" multiple hidden>
 </div>
 
+<!-- Récap « Fin de séjour » -->
+<div class="recap" id="recap">
+  <div class="recap-head">
+    <div><div class="recap-title">Fin de <span>séjour</span></div></div>
+    <button class="disco-close" id="recapClose" aria-label="Fermer">&times;</button>
+  </div>
+  <div id="recapBody"></div>
+</div>
+
+<!-- Placement manuel d'une photo sans GPS -->
+<div class="place-x" id="placeX"></div>
+<div class="place glass" id="placeBanner">
+  <img id="placeThumb" alt="">
+  <div class="pt">Où c'était&nbsp;?<small>Fais glisser la carte sous le point, puis valide.</small></div>
+  <button class="ok" id="placeOk">Ici</button>
+  <button class="no" id="placeSkip">Passer</button>
+</div>
+
+<!-- Progression d'upload -->
+<div class="uprog glass" id="uprog">
+  <span class="txt" id="uprogTxt">Envoi…</span>
+  <span class="bar"><i id="uprogBar"></i></span>
+</div>
+
+<!-- Visionneuse plein écran -->
+<div class="lb" id="lb">
+  <button class="lb-close" id="lbClose" aria-label="Fermer">&times;</button>
+  <button class="lb-nav prev" id="lbPrev" aria-label="Précédent">&lsaquo;</button>
+  <button class="lb-nav next" id="lbNext" aria-label="Suivant">&rsaquo;</button>
+  <div class="lb-media" id="lbMedia"></div>
+  <div class="emoji-pop" id="emojiPop"></div>
+  <div class="lb-bar" id="lbBar"></div>
+</div>
+
 <!-- Voile 1 : code de groupe (tout le site est derrière) -->
 <div class="veil" id="gate">
   <div class="veil-card">
@@ -679,6 +859,8 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.js"></script>
 <script>
 const CATS = {
   base:  {label:'Base',           hex:'#E0A02C'},
@@ -1305,8 +1487,8 @@ map.fitBounds(SPOTS.map(s=>[s.lat,s.lng]),{padding:[70,70]});
    ===================================================================== */
 const CONFIG = {
   GROUP_CODE: 'CORSE2026',   // le code à donner à la bande (modifiable)
-  SB_URL: '',                // ← Project URL Supabase (https://xxxx.supabase.co)
-  SB_KEY: ''                 // ← clé « anon public » (eyJ...)
+  SB_URL: 'https://uopnjexnklinihcxoapt.supabase.co',
+  SB_KEY: 'sb_publishable_dqz7U3qZwxY2CxA9ROoWkA_vFEOxBdH'  // clé publique (safe côté client)
 };
 
 const LS = { ok:'corse_ok', me:'corse_me' };
@@ -1400,6 +1582,10 @@ function setMode(m){
     closeSheet(); listEl.classList.remove('open'); discoEl.classList.remove('open');
     sejourEnter();
   } else {
+    map.removeLayer(photoLayer);
+    document.getElementById('recap').classList.remove('open');
+    document.getElementById('lb').classList.remove('open');
+    closeSheet();
     render();
     if(showExtras) extrasLayer.addTo(map);
   }
@@ -1407,21 +1593,353 @@ function setMode(m){
 document.getElementById('modeSpots').onclick =()=>setMode('spots');
 document.getElementById('modeSejour').onclick=()=>setMode('sejour');
 
-/* --- Séjour : entrée dans le mode + actions (données branchées plus tard) --- */
-function sejourEnter(){
-  /* Le chargement des photos depuis Supabase viendra ici. */
-  document.getElementById('sejStorage').hidden = true;
+/* ===================================================================
+   Le séjour — données : Supabase (auth anonyme, storage, temps réel)
+   =================================================================== */
+const sb = (CONFIG.SB_URL && CONFIG.SB_KEY && window.supabase)
+  ? window.supabase.createClient(CONFIG.SB_URL, CONFIG.SB_KEY,
+      {auth:{persistSession:true, autoRefreshToken:true}})
+  : null;
+
+const REACT_QUICK = ['❤️','😂','🔥','😮','🥹','👍'];
+const EMOJI_ALL = ['❤️','😂','🔥','😮','🥹','👍','🙌','😍','🤩','😎','🥳','😭','🤯','🌊','🏖️','⛰️',
+  '🍾','🍻','☀️','🌅','🐟','🚤','💦','🤌','👏','😅','🥶','🫶','✨','😳','🤤','🧿','💙','🙏','🤙','🍉'];
+
+let photos = [];
+let clusters = [];
+let myId = null;
+let sbReady = false, realtimeSub = null;
+const photoLayer = L.layerGroup();
+const lb = document.getElementById('lb');
+const recap = document.getElementById('recap');
+
+window.__sejdbg = () => ({hasLib: typeof window.supabase, hasClient: !!sb, ready: sbReady, id: myId, nphotos: photos.length});
+const pubUrl = p => `${CONFIG.SB_URL}/storage/v1/object/public/sejour/${p}`;
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID()
+  : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return (c==='x'?r:(r&3|8)).toString(16);}));
+const esc = s => (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
+
+/* ---- Session anonyme + fiche membre ---- */
+async function sejourInit(){
+  if(!sb){ toast('Serveur non configuré'); return false; }
+  if(sbReady) return true;
+  try{
+    let {data:{session}} = await sb.auth.getSession();
+    if(!session){ const {data,error}=await sb.auth.signInAnonymously(); if(error) throw error; session=data.session; }
+    myId = session.user.id;
+    const me=getMe(); if(me) await sb.from('members').upsert({id:myId, pseudo:me.pseudo, color:me.color});
+    subscribeRealtime();
+    sbReady=true; return true;
+  }catch(e){ console.warn(e); toast('Connexion au serveur impossible'); return false; }
 }
-document.getElementById('sejAdd').onclick=()=>{
-  if(!CONFIG.SB_URL || !CONFIG.SB_KEY){
-    toast('Le serveur photos arrive très vite 📸');
-    return;
-  }
+function subscribeRealtime(){
+  if(!sb || realtimeSub) return;
+  realtimeSub = sb.channel('sejour-live')
+    .on('postgres_changes',{event:'*',schema:'public',table:'photos'},   ()=>{ if(mode==='sejour') loadPhotos(); })
+    .on('postgres_changes',{event:'*',schema:'public',table:'reactions'},()=>{ if(mode==='sejour') loadPhotos(); })
+    .subscribe();
+}
+
+/* ---- Chargement + rendu ---- */
+async function loadPhotos(){
+  if(!sb) return;
+  const {data,error} = await sb.from('photos').select('*').order('taken_at',{ascending:true});
+  if(error){ console.warn(error); return; }
+  photos = data||[];
+  const {data:rx} = await sb.from('reactions').select('photo_id,member,emoji');
+  const byP={}; (rx||[]).forEach(r=>{ (byP[r.photo_id]=byP[r.photo_id]||[]).push(r); });
+  photos.forEach(p=>{ p._rx = byP[p.id]||[]; });
+  renderPhotos(); updateStorage();
+  if(recap.classList.contains('open')) buildRecap();
+}
+async function sejourEnter(){
+  photoLayer.addTo(map);
+  document.getElementById('sejEmpty').style.display='';
+  if(await sejourInit()) await loadPhotos();
+}
+
+function clusterPhotos(){
+  clusters=[]; const R=0.0035;
+  photos.filter(p=>p.lat!=null&&p.lng!=null).forEach(p=>{
+    let c=clusters.find(c=>Math.abs(c.lat-p.lat)<R && Math.abs(c.lng-p.lng)<R);
+    if(!c){ c={lat:p.lat,lng:p.lng,items:[]}; clusters.push(c); }
+    c.items.push(p);
+    c.lat=c.items.reduce((s,x)=>s+x.lat,0)/c.items.length;
+    c.lng=c.items.reduce((s,x)=>s+x.lng,0)/c.items.length;
+  });
+}
+function renderPhotos(){
+  clusterPhotos(); photoLayer.clearLayers();
+  document.getElementById('sejEmpty').style.display = photos.length? 'none':'';
+  clusters.forEach((c,ci)=>{
+    const cover=c.items[c.items.length-1];
+    const thumb=pubUrl(cover.storage_path);
+    const cnt=c.items.length>1?`<span class="cnt">${c.items.length}</span>`:'';
+    const play=cover.kind==='video'?`<span class="play">▶</span>`:'';
+    const icon=L.divIcon({className:'',iconSize:[54,54],iconAnchor:[27,27],
+      html:`<div class="pmk"><div class="thumb" style="background-image:url('${thumb}')"></div>${cnt}${play}</div>`});
+    L.marker([c.lat,c.lng],{icon}).addTo(photoLayer).on('click',()=>openGallery(ci));
+  });
+}
+function updateStorage(){
+  const el=document.getElementById('sejStorage');
+  if(!photos.length){ el.hidden=true; return; }
+  el.hidden=false; el.textContent = photos.length + (photos.length>1?' souvenirs partagés':' souvenir partagé');
+}
+function placeName(lat,lng){
+  let best=null,bd=1e9;
+  const c=(n,la,ln)=>{ const d=Math.hypot(la-lat,ln-lng); if(d<bd){bd=d;best=n;} };
+  SPOTS.forEach(s=>c(s.n,s.lat,s.lng));
+  EXTRAS.forEach(g=>g.items.forEach(it=>c(it.n,it.lat,it.lng)));
+  return (best && bd<0.012)? best : 'Un coin de Corse';
+}
+
+/* ---- Galerie d'un lieu (dans la fiche partagée) ---- */
+function galItems(ci){ return clusters[ci].items.slice().sort((a,b)=>new Date(a.taken_at)-new Date(b.taken_at)); }
+function galCard(p,i){
+  const total=p._rx.length;
+  return `<div class="gcard" data-i="${i}">
+    <img src="${pubUrl(p.storage_path)}" loading="lazy" alt="">
+    <span class="who"><i style="background:${esc(p.author_color)}"></i>${esc(p.author_name)}</span>
+    ${p.kind==='video'?'<span class="play-ic">▶</span>':''}
+    ${total?`<span class="rc">❤ ${total}</span>`:''}
+  </div>`;
+}
+function openGallery(ci){
+  const c=clusters[ci]; if(!c) return;
+  const items=galItems(ci);
+  body.innerHTML = `
+    <div class="gal-h"><span class="gt">${esc(placeName(c.lat,c.lng))}</span>
+      <span class="gc">${items.length} souvenir${items.length>1?'s':''}</span></div>
+    <div class="gal-grid">${items.map((p,i)=>galCard(p,i)).join('')}</div>
+    <p class="gal-note">Touche une photo pour l'agrandir, réagir, et légender les tiennes.</p>`;
+  body.querySelectorAll('.gcard').forEach(el=>el.onclick=()=>openLightbox(items, parseInt(el.dataset.i)));
+  sheet.classList.add('open'); document.body.classList.add('sheet-open'); body.scrollTop=0;
+  document.getElementById('closeSheet').focus({preventScroll:true});
+  const z=Math.max(map.getZoom(),13);
+  if(RM) map.setView([c.lat-0.045,c.lng],z); else map.flyTo([c.lat-0.045,c.lng],z,{duration:.5});
+}
+
+/* ---- Visionneuse plein écran ---- */
+let lbItems=[], lbIdx=0, diapoTimer=null;
+function openLightbox(items, idx){ lbItems=items; lbIdx=idx; renderLightbox(); lb.classList.add('open'); }
+function closeLightbox(){ lb.classList.remove('open'); document.getElementById('lbMedia').innerHTML=''; document.getElementById('emojiPop').classList.remove('open'); if(diapoTimer){clearInterval(diapoTimer);diapoTimer=null;} }
+function renderLightbox(){
+  const p=lbItems[lbIdx]; if(!p) return;
+  const media=document.getElementById('lbMedia');
+  media.innerHTML = p.kind==='video'
+    ? `<video src="${pubUrl(p.original_path||p.storage_path)}" controls playsinline ${diapoTimer?'':'autoplay'}></video>`
+    : `<img src="${pubUrl(p.storage_path)}" alt="">`;
+  const mine = p.author===myId;
+  const ds = new Date(p.taken_at).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
+  const counts={}; p._rx.forEach(r=>counts[r.emoji]=(counts[r.emoji]||0)+1);
+  const mySet=new Set(p._rx.filter(r=>r.member===myId).map(r=>r.emoji));
+  const extra=Object.keys(counts).filter(e=>!REACT_QUICK.includes(e));
+  const btn=e=>`<button class="rxbtn ${mySet.has(e)?'on':''}" data-e="${e}">${e}${counts[e]?`<span class="n">${counts[e]}</span>`:''}</button>`;
+  document.getElementById('lbBar').innerHTML = `
+    <div class="lb-who"><i style="background:${esc(p.author_color)}"></i>${esc(p.author_name)}<span class="date">${ds}</span></div>
+    <div class="lb-cap" id="lbCap">${p.caption?esc(p.caption):(mine?'<span style="opacity:.5">Ajoute une légende…</span>':'')}</div>
+    <div class="lb-actions">
+      ${REACT_QUICK.map(btn).join('')}${extra.map(btn).join('')}
+      <button class="rxbtn more" id="rxMore" aria-label="Plus d'emojis">＋</button>
+      <div class="lb-tools">
+        ${mine?'<button class="lb-tool" id="lbEdit">Légender</button>':''}
+        ${mine?'<button class="lb-tool del" id="lbDel">Suppr.</button>':''}
+      </div>
+    </div>`;
+  document.getElementById('lbPrev').disabled = lbIdx===0;
+  document.getElementById('lbNext').disabled = lbIdx===lbItems.length-1;
+  document.getElementById('lbBar').querySelectorAll('.rxbtn[data-e]').forEach(b=>b.onclick=()=>toggleReaction(p,b.dataset.e));
+  document.getElementById('rxMore').onclick=()=>toggleEmojiPop(p);
+  if(mine){ document.getElementById('lbEdit').onclick=()=>editCaption(p); document.getElementById('lbDel').onclick=()=>deletePhoto(p); }
+}
+function lbGo(d){ const n=lbIdx+d; if(n<0||n>=lbItems.length) return; lbIdx=n; renderLightbox(); }
+document.getElementById('lbClose').onclick=closeLightbox;
+document.getElementById('lbPrev').onclick=()=>lbGo(-1);
+document.getElementById('lbNext').onclick=()=>lbGo(1);
+
+function toggleEmojiPop(p){
+  const pop=document.getElementById('emojiPop');
+  if(pop.classList.contains('open')){ pop.classList.remove('open'); return; }
+  pop.innerHTML=EMOJI_ALL.map(e=>`<button data-e="${e}">${e}</button>`).join('');
+  pop.querySelectorAll('button').forEach(b=>b.onclick=()=>{ pop.classList.remove('open'); toggleReaction(p,b.dataset.e); });
+  pop.classList.add('open');
+}
+async function toggleReaction(p,e){
+  if(!sb) return;
+  const mine=p._rx.find(r=>r.member===myId && r.emoji===e);
+  if(mine){ p._rx=p._rx.filter(r=>!(r.member===myId&&r.emoji===e)); renderLightbox();
+    await sb.from('reactions').delete().eq('photo_id',p.id).eq('member',myId).eq('emoji',e); }
+  else{ p._rx.push({photo_id:p.id,member:myId,emoji:e}); renderLightbox();
+    await sb.from('reactions').insert({photo_id:p.id,emoji:e,member:myId}); }
+  renderPhotos();
+}
+function editCaption(p){
+  const cap=document.getElementById('lbCap');
+  cap.contentEditable='true'; cap.textContent=p.caption||''; cap.focus();
+  const save=async()=>{ cap.removeEventListener('blur',save); cap.contentEditable='false';
+    const v=cap.textContent.trim();
+    if(v!==(p.caption||'')){ p.caption=v; await sb.from('photos').update({caption:v}).eq('id',p.id); }
+    renderLightbox(); };
+  cap.addEventListener('blur',save);
+  cap.addEventListener('keydown',ev=>{ if(ev.key==='Enter'){ev.preventDefault(); cap.blur();} });
+}
+async function deletePhoto(p){
+  if(!confirm('Supprimer ce souvenir ? (définitif)')) return;
+  await sb.storage.from('sejour').remove([p.storage_path,p.original_path].filter(Boolean));
+  await sb.from('photos').delete().eq('id',p.id);
+  photos=photos.filter(x=>x.id!==p.id);
+  closeLightbox(); renderPhotos(); updateStorage();
+  if(sheet.classList.contains('open')) closeSheet();
+}
+
+/* ---- Upload : EXIF → placement → compression → stockage ---- */
+const uprog=document.getElementById('uprog');
+function uprogShow(t,pct){ uprog.classList.add('open'); document.getElementById('uprogTxt').textContent=t; document.getElementById('uprogBar').style.width=(pct||0)+'%'; }
+function uprogHide(){ uprog.classList.remove('open'); }
+
+document.getElementById('sejAdd').onclick=async()=>{
+  if(!await sejourInit()) return;
   document.getElementById('sejFile').click();
 };
-document.getElementById('sejAlbum').onclick=()=>{
-  toast('Le récap de fin de séjour arrive bientôt ✨');
+document.getElementById('sejFile').addEventListener('change', async e=>{
+  const files=[...e.target.files]; e.target.value='';
+  if(!files.length) return;
+  if(!await sejourInit()) return;
+  for(let i=0;i<files.length;i++){ try{ await handleFile(files[i],i+1,files.length); }catch(err){ console.warn(err); toast('Souci avec une photo, on continue'); } }
+  uprogHide(); await loadPhotos();
+});
+
+async function compress(file,max,q){
+  let bmp;
+  try{ bmp=await createImageBitmap(file); }
+  catch(_){ bmp=await new Promise((res,rej)=>{ const img=new Image(); img.onload=()=>res(img); img.onerror=rej; img.src=URL.createObjectURL(file); }); }
+  const w=bmp.width||bmp.naturalWidth, h=bmp.height||bmp.naturalHeight;
+  const scale=Math.min(1,max/Math.max(w,h)); const cw=Math.round(w*scale), ch=Math.round(h*scale);
+  const cv=document.createElement('canvas'); cv.width=cw; cv.height=ch;
+  cv.getContext('2d').drawImage(bmp,0,0,cw,ch);
+  const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',q));
+  return {blob,w:cw,h:ch};
+}
+function videoPoster(file){
+  return new Promise((res,rej)=>{
+    const v=document.createElement('video'); v.preload='metadata'; v.muted=true; v.playsInline=true;
+    v.onloadeddata=()=>{ try{ v.currentTime=Math.min(1,(v.duration||3)/3); }catch(_){ res(null);} };
+    v.onseeked=()=>{ try{ const s=Math.min(1,1280/Math.max(v.videoWidth,v.videoHeight));
+      const cv=document.createElement('canvas'); cv.width=Math.round(v.videoWidth*s); cv.height=Math.round(v.videoHeight*s);
+      cv.getContext('2d').drawImage(v,0,0,cv.width,cv.height); cv.toBlob(b=>res(b),'image/jpeg',0.8);
+    }catch(_){ res(null);} };
+    v.onerror=()=>rej(new Error('video')); v.src=URL.createObjectURL(file);
+  });
+}
+function manualPlace(file){
+  return new Promise(res=>{
+    const banner=document.getElementById('placeBanner'), x=document.getElementById('placeX');
+    const thumb=document.getElementById('placeThumb'); const url=URL.createObjectURL(file);
+    thumb.src=url; uprogHide(); banner.classList.add('open'); x.classList.add('open');
+    const done=v=>{ banner.classList.remove('open'); x.classList.remove('open'); URL.revokeObjectURL(url);
+      document.getElementById('placeOk').onclick=null; document.getElementById('placeSkip').onclick=null; res(v); };
+    document.getElementById('placeOk').onclick=()=>{ const c=map.getCenter(); done({lat:c.lat,lng:c.lng}); };
+    document.getElementById('placeSkip').onclick=()=>done(null);
+  });
+}
+async function handleFile(file,n,total){
+  const isVideo=(file.type||'').startsWith('video');
+  uprogShow(`${n}/${total} — lecture…`,8);
+  let lat=null,lng=null,taken=null,placed='manual';
+  if(!isVideo && window.exifr){
+    try{ const ex=await exifr.parse(file,{gps:true}).catch(()=>null);
+      if(ex){ if(ex.latitude!=null){lat=ex.latitude;lng=ex.longitude;placed='exif';}
+        taken=ex.DateTimeOriginal||ex.CreateDate||ex.ModifyDate||null; } }catch(_){}
+  }
+  if(!taken) taken = file.lastModified? new Date(file.lastModified): new Date();
+  if(lat==null){ const pos=await manualPlace(file); if(!pos) return; lat=pos.lat; lng=pos.lng; placed='manual'; }
+  uprogShow(`${n}/${total} — préparation…`,30);
+  let displayBlob=null, w=null, h=null;
+  if(isVideo){ displayBlob=await videoPoster(file).catch(()=>null); }
+  else{ try{ const c=await compress(file,1600,0.82); displayBlob=c.blob; w=c.w; h=c.h; }catch(_){ displayBlob=file; } }
+  const id=uuid();
+  const ext=((file.name||'').split('.').pop()||'bin').toLowerCase().replace(/[^a-z0-9]/g,'')||'bin';
+  const originalPath=`original/${id}.${ext}`;
+  uprogShow(`${n}/${total} — envoi de l'original…`,50);
+  const up1=await sb.storage.from('sejour').upload(originalPath,file,{contentType:file.type||'application/octet-stream'});
+  if(up1.error) throw up1.error;
+  let storagePath;
+  if(isVideo){ storagePath=`poster/${id}.jpg`;
+    if(displayBlob){ const u=await sb.storage.from('sejour').upload(storagePath,displayBlob,{contentType:'image/jpeg'}); if(u.error) storagePath=originalPath; }
+    else storagePath=originalPath;
+  }else{ storagePath=`display/${id}.jpg`;
+    const u=await sb.storage.from('sejour').upload(storagePath,displayBlob,{contentType:(displayBlob===file?(file.type||'image/jpeg'):'image/jpeg')});
+    if(u.error) throw u.error;
+  }
+  uprogShow(`${n}/${total} — enregistrement…`,85);
+  const me=getMe();
+  const ins=await sb.from('photos').insert({ author:myId, author_name:me.pseudo, author_color:me.color,
+    kind:isVideo?'video':'photo', storage_path:storagePath, original_path:originalPath,
+    lat, lng, placed, taken_at:new Date(taken).toISOString(), width:w, height:h });
+  if(ins.error) throw ins.error;
+  uprogShow(`${n}/${total} — ✓`,100);
+}
+
+/* ---- Fin de séjour : journal, diaporama, album ---- */
+document.getElementById('sejAlbum').onclick=async()=>{
+  if(!await sejourInit()) return;
+  await loadPhotos(); buildRecap(); recap.classList.add('open');
 };
+document.getElementById('recapClose').onclick=()=>recap.classList.remove('open');
+function buildRecap(){
+  const el=document.getElementById('recapBody');
+  if(!photos.length){ el.innerHTML='<div class="recap-empty">Pas encore de souvenirs.<br>Ajoute les premières photos&nbsp;!</div>'; return; }
+  const byDay={};
+  photos.forEach(p=>{ const k=new Date(p.taken_at).toISOString().slice(0,10); (byDay[k]=byDay[k]||[]).push(p); });
+  const days=Object.keys(byDay).sort();
+  let h=`<div class="recap-actions">
+    <button class="recap-btn primary" id="recDiapo"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Diaporama</button>
+    <button class="recap-btn" id="recAlbum"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Album (originaux)</button>
+  </div>`;
+  days.forEach(k=>{
+    const d=new Date(k+'T12:00:00'); const label=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+    const items=byDay[k].sort((a,b)=>new Date(a.taken_at)-new Date(b.taken_at));
+    h+=`<div class="jday">${esc(label)}</div><div class="jgrid">`+
+      items.map((p,i)=>`<div class="gcard" data-k="${k}" data-i="${i}"><img src="${pubUrl(p.storage_path)}" loading="lazy" alt="">${p.kind==='video'?'<span class="play-ic">▶</span>':''}</div>`).join('')+`</div>`;
+  });
+  el.innerHTML=h;
+  document.getElementById('recDiapo').onclick=startDiapo;
+  document.getElementById('recAlbum').onclick=downloadAlbum;
+  el.querySelectorAll('.jgrid .gcard').forEach(g=>g.onclick=()=>{
+    const items=byDay[g.dataset.k].sort((a,b)=>new Date(a.taken_at)-new Date(b.taken_at));
+    openLightbox(items, parseInt(g.dataset.i));
+  });
+}
+function startDiapo(){
+  const all=photos.slice().sort((a,b)=>new Date(a.taken_at)-new Date(b.taken_at));
+  if(!all.length) return;
+  openLightbox(all,0);
+  diapoTimer=setInterval(()=>{ if(lbIdx<lbItems.length-1) lbGo(1); else { clearInterval(diapoTimer); diapoTimer=null; } }, 3500);
+}
+async function downloadAlbum(){
+  if(!photos.length) return;
+  toast('Préparation de l\'album… (garde l\'écran allumé)');
+  try{
+    if(!window.JSZip) await loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');
+    const zip=new JSZip();
+    for(const p of photos){
+      try{ const r=await fetch(pubUrl(p.original_path||p.storage_path)); const b=await r.blob();
+        const d=new Date(p.taken_at).toISOString().slice(0,10);
+        const ext=(p.original_path||'x.jpg').split('.').pop();
+        zip.file(`${d}_${p.author_name}_${p.id.slice(0,6)}.${ext}`, b);
+      }catch(_){}
+    }
+    const blob=await zip.generateAsync({type:'blob'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='corse-du-sud-sejour.zip'; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),10000);
+  }catch(e){ console.warn(e); toast('Téléchargement impossible'); }
+}
+
+/* Échap ferme visionneuse / récap */
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(lb.classList.contains('open')) closeLightbox(); recap.classList.remove('open'); } });
+lb.addEventListener('click',e=>{ if(e.target===lb) closeLightbox(); });
 </script>
 </body>
 </html>
