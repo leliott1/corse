@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1A3A48"/><stop offset="1" stop-color="#0A1E28"/>
+    </linearGradient>
+    <radialGradient id="bgGlow" cx="0.5" cy="0.42" r="0.55">
+      <stop offset="0" stop-color="#2A5566" stop-opacity=".55"/><stop offset="1" stop-color="#2A5566" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFD79A"/><stop offset=".45" stop-color="#FF9A5A"/><stop offset="1" stop-color="#F1663A"/>
+    </linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#28C0B7"/><stop offset="1" stop-color="#0A6A72"/>
+    </linearGradient>
+    <radialGradient id="sunGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF3D2" stop-opacity=".95"/>
+      <stop offset=".55" stop-color="#FFD98A" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#FFD98A" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="disc"><circle cx="256" cy="256" r="150"/></clipPath>
+  </defs>
+
+  <!-- Fond granite -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <rect width="512" height="512" fill="url(#bgGlow)"/>
+
+  <!-- Médaillon -->
+  <g clip-path="url(#disc)">
+    <!-- Ciel -->
+    <rect x="106" y="106" width="300" height="300" fill="url(#sky)"/>
+    <!-- Halo du soleil -->
+    <circle cx="256" cy="250" r="128" fill="url(#sunGlow)"/>
+    <!-- Soleil -->
+    <circle cx="256" cy="252" r="50" fill="#FFF1CE"/>
+    <!-- Mer -->
+    <rect x="106" y="278" width="300" height="128" fill="url(#sea)"/>
+    <!-- Reflet du soleil sur l'eau -->
+    <rect x="242" y="278" width="28" height="128" fill="#EAF7EC" opacity=".18"/>
+    <!-- Vagues -->
+    <path d="M106 316 q40 -14 80 0 t80 0 t80 0 t80 0 V406 H106Z" fill="#0C7B7F" opacity=".55"/>
+    <path d="M106 346 q46 14 92 0 t92 0 t92 0 V406 H106Z" fill="#0A5F66" opacity=".7"/>
+  </g>
+
+  <!-- Anneau -->
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#FFFFFF" stroke-width="9" opacity=".92"/>
+  <circle cx="256" cy="256" r="145" fill="none" stroke="#000000" stroke-width="2" opacity=".10"/>
+</svg>
