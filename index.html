@@ -81,10 +81,13 @@
     display:inline-block;pointer-events:auto;
     border-radius:20px;
     padding:10px 16px 9px;
+    max-width:calc(100vw - 172px);   /* laisse la place à la bascule en haut à droite */
   }
-  .title{font-size:19px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+  .title{font-size:19px;font-weight:800;letter-spacing:-.02em;line-height:1.1;
+         white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .title span{color:var(--corail)}
-  .sub{font-size:11px;font-weight:700;color:var(--encre-2);margin-top:1px}
+  .sub{font-size:11px;font-weight:700;color:var(--encre-2);margin-top:1px;
+       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
   /* ---------- Filtres ---------- */
   /* pointer-events:none sur la bande, auto sur les puces : la carte reste
@@ -424,10 +427,13 @@
   @media (max-height:480px) and (orientation:landscape){
     .sub{display:none}
     .brand{padding:8px 12px;border-radius:14px}
-    .filters{top:calc(env(safe-area-inset-top) + 12px);left:150px;right:124px;padding:4px 8px}
+    /* Rangée 0 : marque (gauche) · bascule (centre) · outils (droite) ; filtres en dessous */
+    body .modes{left:50%;right:auto;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 8px)}
+    body .modes button{min-height:34px;padding:6px 12px}
+    .filters{top:calc(env(safe-area-inset-top) + 52px);left:12px;right:12px;padding:4px 8px}
     .fabs{flex-direction:row;bottom:auto;top:calc(env(safe-area-inset-top) + 10px);right:12px;gap:8px}
     .fab{width:40px;height:40px}
-    .disco-btn{bottom:auto;top:calc(env(safe-area-inset-top) + 74px);min-height:38px;padding:8px 12px;font-size:11.5px}
+    .disco-btn{bottom:calc(env(safe-area-inset-bottom) + 8px);top:auto;left:12px;min-height:38px;padding:8px 12px;font-size:11.5px}
     .cards{bottom:calc(env(safe-area-inset-bottom) + 8px)}
     .card{flex-basis:230px}
     .card .im{height:64px}
@@ -462,6 +468,109 @@
   @media (prefers-reduced-motion:reduce){
     *{transition:none !important;animation:none !important}
   }
+
+  /* ============ Le séjour : bascule de mode ============ */
+  .modes{
+    position:absolute;z-index:1000;right:12px;
+    top:calc(env(safe-area-inset-top) + 12px);
+    display:flex;gap:2px;padding:3px;border-radius:999px;pointer-events:auto;
+  }
+  .modes button{
+    border:0;cursor:pointer;background:transparent;color:var(--encre-2);
+    font-family:'Nunito',sans-serif;font-size:12.5px;font-weight:800;
+    min-height:38px;padding:8px 15px;border-radius:999px;
+    display:flex;align-items:center;gap:6px;transition:background .18s,color .18s;
+  }
+  .modes button svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+  .modes button.on{background:var(--corail-btn);color:#fff;box-shadow:0 4px 12px rgba(200,64,15,.35)}
+  .modes button:focus-visible{outline:2px solid var(--corail);outline-offset:2px}
+
+  /* En mode séjour, on masque l'attirail « spots » ; et inversement */
+  body[data-mode="sejour"] .filters,
+  body[data-mode="sejour"] .cards,
+  body[data-mode="sejour"] .disco-btn,
+  body[data-mode="sejour"] .topbar,
+  body[data-mode="sejour"] #listToggle{display:none}
+  body[data-mode="spots"] #sejourUI{display:none}
+  /* Écrans étroits : bascule compacte, sous-titre masqué pour éviter le chevauchement */
+  @media (max-width:389px){ .modes button{padding:8px 11px} .brand .sub{display:none} }
+
+  /* ============ Séjour : boutons et panneaux ============ */
+  #sejourUI{position:absolute;inset:0;z-index:900;pointer-events:none}
+  #sejourUI > *{pointer-events:auto}
+  .sej-add{
+    position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom) + 20px);
+    width:60px;height:60px;border-radius:50%;cursor:pointer;border:1px solid rgba(255,255,255,.45);
+    background:color-mix(in srgb,var(--corail-btn) 94%,transparent);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 10px 26px rgba(255,83,36,.5);
+  }
+  .sej-add svg{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+  .sej-add:active{transform:scale(.95)}
+  .sej-album{
+    position:absolute;left:12px;bottom:calc(env(safe-area-inset-bottom) + 20px);
+    min-height:48px;padding:11px 16px;border-radius:999px;cursor:pointer;
+    color:var(--encre);font-family:'Nunito',sans-serif;font-size:12.5px;font-weight:800;
+    display:flex;align-items:center;gap:8px;
+  }
+  .sej-album svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .sej-storage{
+    position:absolute;left:50%;transform:translateX(-50%);
+    bottom:calc(env(safe-area-inset-bottom) + 26px);
+    font-size:10.5px;font-weight:700;color:var(--encre-2);
+    padding:6px 12px;border-radius:999px;white-space:nowrap;
+  }
+  /* État vide, centré sur la carte */
+  .sej-empty{
+    position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);
+    width:min(88vw,340px);text-align:center;border-radius:24px;padding:22px 20px;
+  }
+  .sej-empty h3{font-size:18px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px}
+  .sej-empty p{font-size:13px;font-weight:600;color:#41525D;line-height:1.5}
+  .sej-empty .em{font-size:34px;display:block;margin-bottom:8px}
+
+  /* ============ Voile plein écran : code + identité ============ */
+  .veil{
+    position:fixed;inset:0;z-index:3000;
+    background:linear-gradient(150deg,#12303C,#0A1E28);
+    display:flex;align-items:center;justify-content:center;padding:24px;
+    padding-top:calc(env(safe-area-inset-top) + 24px);
+    padding-bottom:calc(env(safe-area-inset-bottom) + 24px);
+  }
+  .veil[hidden]{display:none}
+  .veil-card{
+    width:min(92vw,380px);border-radius:26px;padding:26px 22px;text-align:center;
+    background:rgba(255,255,255,.9);
+    -webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);
+    border:1px solid rgba(255,255,255,.6);box-shadow:0 24px 60px rgba(0,0,0,.4);
+  }
+  .veil-logo{width:76px;height:76px;border-radius:22px;margin:0 auto 14px;display:block;box-shadow:0 10px 24px rgba(0,0,0,.28)}
+  .veil-card h2{font-size:21px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+  .veil-card h2 span{color:var(--corail)}
+  .veil-card .lead{font-size:13px;font-weight:600;color:#41525D;line-height:1.5;margin-bottom:18px}
+  .field{
+    width:100%;min-height:52px;padding:14px 16px;border-radius:16px;
+    border:1px solid rgba(78,96,112,.28);background:rgba(255,255,255,.85);
+    font-family:'Nunito',sans-serif;font-size:16px;font-weight:700;color:var(--encre);
+    text-align:center;
+  }
+  .field:focus{outline:2px solid var(--corail);outline-offset:1px;border-color:transparent}
+  #codeField{letter-spacing:.18em;text-transform:uppercase}
+  .veil-btn{
+    width:100%;min-height:52px;margin-top:14px;border:0;border-radius:16px;cursor:pointer;
+    background:var(--corail-btn);color:#fff;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35), 0 10px 24px rgba(200,64,15,.4);
+  }
+  .veil-btn:active{transform:scale(.98)}
+  .veil-btn[disabled]{opacity:.5;cursor:default;transform:none}
+  .veil-err{min-height:18px;font-size:12px;font-weight:800;color:#E64514;margin-top:10px}
+  .swatches{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:6px 0 4px}
+  .swatch{
+    width:40px;height:40px;border-radius:50%;cursor:pointer;border:3px solid transparent;
+    box-shadow:0 3px 8px rgba(0,0,0,.2);transition:transform .12s;
+  }
+  .swatch.on{border-color:#fff;transform:scale(1.12);box-shadow:0 0 0 2px var(--encre),0 4px 10px rgba(0,0,0,.3)}
+  .veil-hint{font-size:11px;font-weight:700;color:#5A6B77;margin-top:12px}
 </style>
 </head>
 <body>
@@ -471,8 +580,19 @@
 <div class="topbar">
   <div class="brand glass">
     <h1 class="title">Corse du <span>Sud</span></h1>
-    <div class="sub" id="counter" aria-live="polite">17 spots · base Porto-Vecchio</div>
+    <div class="sub" id="counter" aria-live="polite">17 spots · Porto-Vecchio</div>
   </div>
+</div>
+
+<div class="modes glass" role="tablist" aria-label="Mode d'affichage">
+  <button id="modeSpots" class="on" role="tab" aria-selected="true">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-5.686-7-11a7 7 0 1 1 14 0c0 5.314-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>
+    Spots
+  </button>
+  <button id="modeSejour" role="tab" aria-selected="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.6-2h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.2"/></svg>
+    Séjour
+  </button>
 </div>
 
 <div class="filters" id="filters"></div>
@@ -508,6 +628,54 @@
   <button class="close" id="closeSheet" aria-label="Fermer la fiche">&times;</button>
   <div class="grip"><i></i></div>
   <div class="sheet-body" id="sheetBody"></div>
+</div>
+
+<!-- ============ Mode « Le séjour » ============ -->
+<div id="sejourUI" aria-hidden="true">
+  <div class="sej-empty glass" id="sejEmpty">
+    <span class="em">📸</span>
+    <h3>Le séjour commence ici</h3>
+    <p>Ajoute tes photos et vidéos : elles se placent toutes seules sur la carte, là où elles ont été prises.</p>
+  </div>
+  <button class="sej-album glass" id="sejAlbum">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="m4 15 5-5 4 4 3-3 4 4"/><circle cx="9" cy="9" r="1.4"/></svg>
+    Fin de séjour
+  </button>
+  <div class="sej-storage glass" id="sejStorage" hidden></div>
+  <button class="sej-add" id="sejAdd" aria-label="Ajouter des photos ou vidéos">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <input type="file" id="sejFile" accept="image/*,video/*" multiple hidden>
+</div>
+
+<!-- Voile 1 : code de groupe (tout le site est derrière) -->
+<div class="veil" id="gate">
+  <div class="veil-card">
+    <img class="veil-logo" src="img/icon-192.png" alt="">
+    <h2>Corse du <span>Sud</span></h2>
+    <p class="lead">Notre carnet de voyage privé. Entre le code de la bande pour ouvrir la carte et le séjour.</p>
+    <form id="gateForm" autocomplete="off">
+      <input class="field" id="codeField" type="text" inputmode="text" autocapitalize="characters"
+             placeholder="Code de groupe" aria-label="Code de groupe" maxlength="24">
+      <button class="veil-btn" id="gateBtn" type="submit">Entrer</button>
+    </form>
+    <div class="veil-err" id="gateErr" role="alert"></div>
+  </div>
+</div>
+
+<!-- Voile 2 : choix du pseudo + couleur -->
+<div class="veil" id="ident" hidden>
+  <div class="veil-card">
+    <h2>Bienvenue&nbsp;! 👋</h2>
+    <p class="lead">Choisis ton pseudo et ta couleur. C'est ce qui apparaîtra à côté de tes photos.</p>
+    <form id="identForm" autocomplete="off">
+      <input class="field" id="pseudoField" type="text" placeholder="Ton pseudo"
+             aria-label="Ton pseudo" maxlength="30">
+      <div class="swatches" id="swatches" role="radiogroup" aria-label="Ta couleur"></div>
+      <button class="veil-btn" id="identBtn" type="submit">C'est parti</button>
+    </form>
+    <div class="veil-hint">Tu pourras les changer plus tard.</div>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -830,7 +998,7 @@ function render(){
     if(state.has(s.cat)){ markers[i].addTo(map); n++; }
     else{ map.removeLayer(markers[i]); }
   });
-  document.getElementById('counter').textContent = n + (n>1?' spots':' spot') + ' · base Porto-Vecchio';
+  document.getElementById('counter').textContent = n + (n>1?' spots':' spot') + ' · Porto-Vecchio';
   if(active!==null && !state.has(SPOTS[active].cat)) active=null;
   buildCards();
   if(active!==null) select(active,{scroll:true,fly:false});
@@ -1130,6 +1298,130 @@ function openExtra(gi, ii){
 
 render();
 map.fitBounds(SPOTS.map(s=>[s.lat,s.lng]),{padding:[70,70]});
+
+/* =====================================================================
+   « Le séjour » — verrou par code, identité, bascule de mode.
+   La partie données (Supabase) se branche ici une fois les clés fournies.
+   ===================================================================== */
+const CONFIG = {
+  GROUP_CODE: 'CORSE2026',   // le code à donner à la bande (modifiable)
+  SB_URL: '',                // ← Project URL Supabase (https://xxxx.supabase.co)
+  SB_KEY: ''                 // ← clé « anon public » (eyJ...)
+};
+
+const LS = { ok:'corse_ok', me:'corse_me' };
+const gate  = document.getElementById('gate');
+const ident = document.getElementById('ident');
+
+/* --- petit toast --- */
+function toast(msg){
+  let t=document.getElementById('toast');
+  if(!t){
+    t=document.createElement('div'); t.id='toast';
+    t.style.cssText='position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 100px);'
+      +'transform:translateX(-50%);z-index:3500;background:rgba(22,35,44,.95);color:#fff;'
+      +"font:800 13px 'Nunito',sans-serif;padding:12px 18px;border-radius:14px;max-width:82vw;"
+      +'text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;transition:opacity .25s';
+    document.body.appendChild(t);
+  }
+  t.textContent=msg; t.style.opacity='1';
+  clearTimeout(t._h); t._h=setTimeout(()=>{t.style.opacity='0';},2600);
+}
+
+/* --- Verrou par code (tout le site est derrière) --- */
+if(localStorage.getItem(LS.ok)==='1'){ gate.hidden=true; }
+else { gate.hidden=false; setTimeout(()=>document.getElementById('codeField').focus(),200); }
+
+document.getElementById('gateForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const v=document.getElementById('codeField').value.trim().toUpperCase();
+  if(v===CONFIG.GROUP_CODE.trim().toUpperCase()){
+    localStorage.setItem(LS.ok,'1');
+    gate.hidden=true;
+    document.getElementById('gateErr').textContent='';
+  } else {
+    document.getElementById('gateErr').textContent='Code incorrect 🤔';
+    document.getElementById('codeField').select();
+  }
+});
+
+/* --- Identité : pseudo + couleur (demandée à la 1re entrée dans le séjour) --- */
+const PALETTE=['#FF5324','#12A5A0','#3E8CC7','#E0A02C','#C0563F','#43704E','#8E5BB5','#E8618C'];
+let pickColor=PALETTE[0];
+let identCb=null;
+(function buildSwatches(){
+  const box=document.getElementById('swatches');
+  PALETTE.forEach((c,idx)=>{
+    const b=document.createElement('button');
+    b.type='button'; b.className='swatch'+(idx===0?' on':'');
+    b.style.background=c; b.setAttribute('role','radio');
+    b.setAttribute('aria-checked',idx===0?'true':'false');
+    b.setAttribute('aria-label','Couleur '+(idx+1));
+    b.onclick=()=>{
+      pickColor=c;
+      box.querySelectorAll('.swatch').forEach(s=>{s.classList.remove('on');s.setAttribute('aria-checked','false');});
+      b.classList.add('on'); b.setAttribute('aria-checked','true');
+    };
+    box.appendChild(b);
+  });
+})();
+function getMe(){ try{return JSON.parse(localStorage.getItem(LS.me)||'null');}catch(_){return null;} }
+function openIdent(cb){
+  identCb=cb||null;
+  const me=getMe();
+  if(me){ document.getElementById('pseudoField').value=me.pseudo||''; pickColor=me.color||PALETTE[0]; }
+  ident.hidden=false;
+  setTimeout(()=>document.getElementById('pseudoField').focus(),200);
+}
+document.getElementById('identForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const p=document.getElementById('pseudoField').value.trim();
+  if(!p){ document.getElementById('pseudoField').focus(); return; }
+  localStorage.setItem(LS.me, JSON.stringify({pseudo:p, color:pickColor}));
+  ident.hidden=true;
+  const cb=identCb; identCb=null; if(cb) cb();
+});
+
+/* --- Bascule Spots ⇄ Séjour --- */
+let mode='spots';
+document.body.dataset.mode='spots';
+function setMode(m){
+  if(m===mode) return;
+  if(m==='sejour' && !getMe()){ openIdent(()=>setMode('sejour')); return; }
+  mode=m;
+  document.body.dataset.mode=m;
+  const bS=document.getElementById('modeSpots'), bJ=document.getElementById('modeSejour');
+  bS.classList.toggle('on',m==='spots'); bJ.classList.toggle('on',m==='sejour');
+  bS.setAttribute('aria-selected',m==='spots'); bJ.setAttribute('aria-selected',m==='sejour');
+  document.getElementById('sejourUI').setAttribute('aria-hidden', m==='spots');
+  if(m==='sejour'){
+    SPOTS.forEach((s,i)=>map.removeLayer(markers[i]));
+    map.removeLayer(extrasLayer);
+    closeSheet(); listEl.classList.remove('open'); discoEl.classList.remove('open');
+    sejourEnter();
+  } else {
+    render();
+    if(showExtras) extrasLayer.addTo(map);
+  }
+}
+document.getElementById('modeSpots').onclick =()=>setMode('spots');
+document.getElementById('modeSejour').onclick=()=>setMode('sejour');
+
+/* --- Séjour : entrée dans le mode + actions (données branchées plus tard) --- */
+function sejourEnter(){
+  /* Le chargement des photos depuis Supabase viendra ici. */
+  document.getElementById('sejStorage').hidden = true;
+}
+document.getElementById('sejAdd').onclick=()=>{
+  if(!CONFIG.SB_URL || !CONFIG.SB_KEY){
+    toast('Le serveur photos arrive très vite 📸');
+    return;
+  }
+  document.getElementById('sejFile').click();
+};
+document.getElementById('sejAlbum').onclick=()=>{
+  toast('Le récap de fin de séjour arrive bientôt ✨');
+};
 </script>
 </body>
 </html>
