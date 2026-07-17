@@ -1929,21 +1929,69 @@ async function compress(file,max,q){
   const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',q));
   return {blob,w:cw,h:ch};
 }
+/* Miniature vidéo : robuste (load() explicite, playsinline iOS) et avec un
+   délai de secours — plus JAMAIS d'envoi bloqué sur une vidéo récalcitrante. */
 function videoPoster(file){
-  return new Promise((res,rej)=>{
-    const v=document.createElement('video'); v.preload='metadata'; v.muted=true; v.playsInline=true;
-    v.onloadeddata=()=>{ try{ v.currentTime=Math.min(1,(v.duration||3)/3); }catch(_){ res(null);} };
-    v.onseeked=()=>{ try{ const s=Math.min(1,1280/Math.max(v.videoWidth,v.videoHeight));
+  return new Promise(res=>{
+    const url=URL.createObjectURL(file);
+    const v=document.createElement('video');
+    v.preload='auto'; v.muted=true; v.playsInline=true; v.setAttribute('playsinline','');
+    let done=false;
+    const fin=b=>{ if(done) return; done=true; clearTimeout(tm); URL.revokeObjectURL(url); res(b||null); };
+    const tm=setTimeout(()=>fin(null),7000);           // délai de secours : on continue sans frame
+    const grab=()=>{ try{
+      if(!v.videoWidth){ fin(null); return; }
+      const s=Math.min(1,1280/Math.max(v.videoWidth,v.videoHeight));
       const cv=document.createElement('canvas'); cv.width=Math.round(v.videoWidth*s); cv.height=Math.round(v.videoHeight*s);
-      cv.getContext('2d').drawImage(v,0,0,cv.width,cv.height); cv.toBlob(b=>res(b),'image/jpeg',0.8);
-    }catch(_){ res(null);} };
-    v.onerror=()=>rej(new Error('video')); v.src=URL.createObjectURL(file);
+      cv.getContext('2d').drawImage(v,0,0,cv.width,cv.height);
+      cv.toBlob(b=>fin(b),'image/jpeg',0.8);
+    }catch(_){ fin(null);} };
+    v.onloadeddata=()=>{ try{ v.currentTime=Math.min(1,(v.duration||3)/3); }catch(_){ grab(); } };
+    v.onseeked=grab;
+    v.onerror=()=>fin(null);
+    v.src=url; v.load();
   });
 }
-function manualPlace(file){
+/* Miniature de secours quand la frame est introuvable : tuile sombre + ▶ */
+function posterFallback(){
+  return new Promise(res=>{
+    const cv=document.createElement('canvas'); cv.width=1280; cv.height=960;
+    const g=cv.getContext('2d');
+    const grad=g.createLinearGradient(0,0,0,960);
+    grad.addColorStop(0,'#22404F'); grad.addColorStop(1,'#0D1D26');
+    g.fillStyle=grad; g.fillRect(0,0,1280,960);
+    g.fillStyle='rgba(255,255,255,.92)';
+    g.beginPath(); g.moveTo(560,380); g.lineTo(760,480); g.lineTo(560,580); g.closePath(); g.fill();
+    cv.toBlob(b=>res(b),'image/jpeg',0.8);
+  });
+}
+/* Date de prise d'une vidéo : lue dans l'atome mvhd du MP4/MOV (l'heure de
+   copie du fichier est souvent fausse). Cherche dans le début et la fin. */
+async function mp4Date(file){
+  try{
+    const read=async blob=>new Uint8Array(await blob.arrayBuffer());
+    const CH=1024*1024;
+    const parts=[await read(file.slice(0,CH))];
+    if(file.size>CH) parts.push(await read(file.slice(-CH)));
+    for(const b of parts){
+      for(let i=0;i+20<=b.length;i++){
+        if(b[i]===0x6D&&b[i+1]===0x76&&b[i+2]===0x68&&b[i+3]===0x64){ // 'mvhd'
+          const ver=b[i+4]; let sec;
+          if(ver===1){ sec=0; for(let k=0;k<8;k++) sec=sec*256+b[i+8+k]; }
+          else{ sec=(b[i+8]*16777216)+(b[i+9]*65536)+(b[i+10]*256)+b[i+11]; }
+          const d=new Date((sec-2082844800)*1000);      // epoch 1904 → 1970
+          const y=d.getFullYear();
+          if(y>=2004 && y<=new Date().getFullYear()+1) return d;
+        }
+      }
+    }
+  }catch(_){}
+  return null;
+}
+function manualPlace(thumbBlob){
   return new Promise(res=>{
     const banner=document.getElementById('placeBanner'), x=document.getElementById('placeX');
-    const thumb=document.getElementById('placeThumb'); const url=URL.createObjectURL(file);
+    const thumb=document.getElementById('placeThumb'); const url=URL.createObjectURL(thumbBlob);
     thumb.src=url; uprogHide(); banner.classList.add('open'); x.classList.add('open');
     const done=v=>{ banner.classList.remove('open'); x.classList.remove('open'); URL.revokeObjectURL(url);
       document.getElementById('placeOk').onclick=null; document.getElementById('placeSkip').onclick=null; res(v); };
@@ -1955,17 +2003,22 @@ async function handleFile(file,n,total){
   const isVideo=(file.type||'').startsWith('video');
   uprogShow(`${n}/${total} — lecture…`,10);
   let lat=null,lng=null,taken=null,placed='manual';
-  if(!isVideo && window.exifr){
+  let displayBlob=null, w=null, h=null;
+  if(isVideo){
+    taken=await mp4Date(file);                          // vraie date de prise (atome mvhd)
+    displayBlob=await videoPoster(file);                // jamais bloquant (délai de secours)
+    if(!displayBlob) displayBlob=await posterFallback();
+  }else if(window.exifr){
     try{ const ex=await exifr.parse(file,{gps:true}).catch(()=>null);
       if(ex){ if(ex.latitude!=null){lat=ex.latitude;lng=ex.longitude;placed='exif';}
         taken=ex.DateTimeOriginal||ex.CreateDate||ex.ModifyDate||null; } }catch(_){}
   }
   if(!taken) taken = file.lastModified? new Date(file.lastModified): new Date();
-  if(lat==null){ const pos=await manualPlace(file); if(!pos) return; lat=pos.lat; lng=pos.lng; placed='manual'; }
+  if(lat==null){ const pos=await manualPlace(isVideo?displayBlob:file); if(!pos) return; lat=pos.lat; lng=pos.lng; placed='manual'; }
   uprogShow(`${n}/${total} — préparation…`,35);
-  let displayBlob=null, w=null, h=null;
-  if(isVideo){ displayBlob=await videoPoster(file).catch(()=>null); }
-  else{ try{ const c=await compress(file,1600,0.82); displayBlob=c.blob; w=c.w; h=c.h; }catch(_){ displayBlob=file; } }
+  if(!isVideo){
+    try{ const c=await compress(file,1600,0.82); displayBlob=c.blob; w=c.w; h=c.h; }catch(_){ displayBlob=file; }
+  }
   const id=uuid();
   const ext=((file.name||'').split('.').pop()||'bin').toLowerCase().replace(/[^a-z0-9]/g,'')||'bin';
   const originalPath=`original/${id}.${ext}`;
@@ -1973,8 +2026,8 @@ async function handleFile(file,n,total){
   uprogShow(`${n}/${total} — envoi…`,60);
   let storagePath;
   if(isVideo){ storagePath=`poster/${id}.jpg`;
-    if(displayBlob){ const u=await sb.storage.from('sejour').upload(storagePath,displayBlob,{contentType:'image/jpeg'}); if(u.error) storagePath=originalPath; }
-    else storagePath=originalPath;
+    const u=await sb.storage.from('sejour').upload(storagePath,displayBlob,{contentType:'image/jpeg'});
+    if(u.error) throw u.error;
   }else{ storagePath=`display/${id}.jpg`;
     const u=await sb.storage.from('sejour').upload(storagePath,displayBlob,{contentType:(displayBlob===file?(file.type||'image/jpeg'):'image/jpeg')});
     if(u.error) throw u.error;
