@@ -475,6 +475,26 @@
     *{transition:none !important;animation:none !important}
   }
 
+  /* ============ Séjour : rejouer le trajet ============ */
+  .route-hud{
+    position:absolute;z-index:1400;left:50%;top:calc(env(safe-area-inset-top) + 12px);
+    transform:translateX(-50%);display:flex;align-items:center;gap:10px;
+    padding:8px 10px 8px 14px;border-radius:999px;max-width:calc(100vw - 24px);
+    background:rgba(6,18,26,.82);color:#fff;box-shadow:0 8px 24px rgba(6,18,26,.4);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  }
+  .route-hud[hidden]{display:none}
+  .route-hud .rh-veh{font-size:20px;line-height:1}
+  .route-hud .rh-txt{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .route-hud .rh-stop{
+    flex:0 0 auto;border:0;cursor:pointer;background:rgba(255,255,255,.16);color:#fff;
+    font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;padding:7px 12px;border-radius:999px;min-height:34px;
+  }
+  .route-veh{font-size:27px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.55));will-change:transform}
+  body.route-playing .modes,
+  body.route-playing .sej-add,
+  body.route-playing .sej-album{display:none}
+
   /* ============ Le séjour : bascule de mode ============ */
   .modes{
     position:absolute;z-index:1000;right:12px;
@@ -600,6 +620,17 @@
   }
   .pmk .play{position:absolute;left:6px;bottom:6px;color:#fff;font-size:14px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
   .pmk:active{transform:scale(.93)}
+  /* Cluster = pile de tuiles photo (façon Photos iPhone / Google Photos) */
+  .pmk.stack{width:62px;height:62px}
+  .pmk.stack .tile{
+    position:absolute;left:50%;top:50%;width:50px;height:50px;border-radius:13px;
+    border:3px solid #fff;background:#c6d4dc center/cover no-repeat;
+    box-shadow:0 4px 12px rgba(9,30,44,.42);transform:translate(-50%,-50%);
+  }
+  .pmk.stack .tile:nth-last-child(2){transform:translate(-50%,-50%) rotate(-8deg) translate(-6px,-2px)}
+  .pmk.stack .tile:nth-last-child(3){transform:translate(-50%,-50%) rotate(8deg)  translate(6px,-1px)}
+  .pmk.stack .tile:last-child{transform:translate(-50%,-50%);box-shadow:0 6px 16px rgba(9,30,44,.5)}
+  .pmk.stack .cnt{top:-4px;right:-4px}
 
   /* ============ Galerie (dans la fiche partagée) ============ */
   .gal-h{display:flex;align-items:baseline;gap:9px;margin:2px 0 12px;flex-wrap:wrap}
@@ -619,13 +650,29 @@
   .gcard .who i{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
   .gcard .play-ic{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:34px;text-shadow:0 2px 10px rgba(0,0,0,.6);pointer-events:none}
   .gcard .rc{position:absolute;bottom:6px;right:6px;background:rgba(6,18,26,.66);color:#fff;font-size:10px;font-weight:800;padding:3px 7px;border-radius:999px;text-shadow:0 1px 2px rgba(0,0,0,.55)}
+  /* Réactions en surimpression sur la photo (emojis visibles directement) */
+  .rx-badges{position:absolute;right:6px;bottom:6px;display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end;max-width:80%;pointer-events:none}
+  .rx-badges .rxb{display:inline-flex;align-items:center;gap:2px;background:rgba(6,18,26,.62);
+    border-radius:999px;padding:2px 6px;font-size:12px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+  .rx-badges .rxb b{color:#fff;font-size:10px;font-weight:800}
   .gal-note{font-size:11px;font-weight:600;color:#5A6B77;margin:14px 0 2px;line-height:1.5}
 
   /* ============ Visionneuse plein écran ============ */
   .lb{position:fixed;inset:0;z-index:2500;background:rgba(6,14,20,.96);display:none;flex-direction:column}
   .lb.open{display:flex}
-  .lb-media{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:calc(env(safe-area-inset-top) + 8px) 10px 6px;min-height:0}
+  .lb-media{position:relative;flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:calc(env(safe-area-inset-top) + 8px) 10px 6px;min-height:0}
   .lb-media img,.lb-media video{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px}
+  /* Emojis de réactions posés en haut de la photo agrandie */
+  .lb-rx{position:absolute;top:calc(env(safe-area-inset-top) + 14px);left:50%;transform:translateX(-50%);
+    z-index:2;display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:82%;pointer-events:none}
+  .lb-rx .rxb{display:inline-flex;align-items:center;gap:3px;background:rgba(6,14,20,.6);border:1px solid rgba(255,255,255,.14);
+    border-radius:999px;padding:4px 9px;font-size:16px;line-height:1;backdrop-filter:blur(6px)}
+  .lb-rx .rxb b{color:#fff;font-size:12px;font-weight:800}
+  /* Changement de photo : ça slide (sens selon la navigation) */
+  @keyframes lbNext{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}
+  @keyframes lbPrev{from{transform:translateX(-30px);opacity:0}to{transform:none;opacity:1}}
+  .lb-media.anim-next img,.lb-media.anim-next video{animation:lbNext .26s ease}
+  .lb-media.anim-prev img,.lb-media.anim-prev video{animation:lbPrev .26s ease}
   .lb-close{
     position:absolute;top:calc(env(safe-area-inset-top) + 8px);right:12px;z-index:3;
     width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.25);cursor:pointer;
@@ -799,7 +846,7 @@
   </div>
   <button class="sej-album glass" id="sejAlbum">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="m4 15 5-5 4 4 3-3 4 4"/><circle cx="9" cy="9" r="1.4"/></svg>
-    Fin de séjour
+    Récap
   </button>
   <div class="sej-storage glass" id="sejStorage" hidden></div>
   <button class="sej-add" id="sejAdd" aria-label="Ajouter des photos ou vidéos">
@@ -808,13 +855,20 @@
   <input type="file" id="sejFile" accept="image/*,video/*" multiple hidden>
 </div>
 
-<!-- Récap « Fin de séjour » -->
+<!-- Récap du séjour -->
 <div class="recap" id="recap" role="dialog" aria-modal="true" aria-label="Récapitulatif du séjour">
   <div class="recap-head">
-    <div><div class="recap-title">Fin de <span>séjour</span></div></div>
+    <div><div class="recap-title">Le <span>récap</span></div></div>
     <button class="disco-close" id="recapClose" aria-label="Fermer">&times;</button>
   </div>
   <div id="recapBody"></div>
+</div>
+
+<!-- HUD pendant l'animation « rejouer le trajet » -->
+<div class="route-hud" id="routeHud" hidden role="status" aria-live="polite">
+  <span class="rh-veh" id="rhVeh">🚗</span>
+  <span class="rh-txt" id="rhTxt">En route…</span>
+  <button class="rh-stop" id="rhStop" aria-label="Arrêter le trajet">Arrêter</button>
 </div>
 
 <!-- Placement manuel d'une photo sans GPS -->
@@ -1597,6 +1651,7 @@ function setMode(m){
     closeSheet(); listEl.classList.remove('open'); discoEl.classList.remove('open');
     sejourEnter();
   } else {
+    if(typeof stopRoute==='function') stopRoute();
     map.removeLayer(photoLayer);
     document.getElementById('recap').classList.remove('open');
     document.getElementById('lb').classList.remove('open');
@@ -1622,6 +1677,7 @@ const EMOJI_ALL = ['❤️','😂','🔥','😮','🥹','👍','🙌','😍','�
 
 let photos = [];
 let clusters = [];
+let bgUploads = [];
 let myId = null;
 let sbReady = false, realtimeSub = null;
 const photoLayer = L.layerGroup();
@@ -1687,12 +1743,21 @@ function renderPhotos(){
   clusterPhotos(); photoLayer.clearLayers();
   document.getElementById('sejEmpty').style.display = photos.length? 'none':'';
   clusters.forEach((c,ci)=>{
-    const cover=c.items[c.items.length-1];
-    const thumb=pubUrl(cover.storage_path);
-    const cnt=c.items.length>1?`<span class="cnt">${c.items.length}</span>`:'';
+    const items=c.items;
+    const cover=items[items.length-1];
     const play=cover.kind==='video'?`<span class="play">▶</span>`:'';
-    const icon=L.divIcon({className:'',iconSize:[54,54],iconAnchor:[27,27],
-      html:`<div class="pmk"><div class="thumb" style="background-image:url('${thumb}')"></div>${cnt}${play}</div>`});
+    let html, size;
+    if(items.length>1){
+      // Pile de tuiles (façon Photos iPhone) : la couverture (dernière) au-dessus et centrée
+      const tiles=items.slice(-3)
+        .map(p=>`<div class="tile" style="background-image:url('${pubUrl(p.storage_path)}')"></div>`).join('');
+      html=`<div class="pmk stack">${tiles}<span class="cnt">${items.length}</span>${play}</div>`;
+      size=62;
+    }else{
+      html=`<div class="pmk"><div class="thumb" style="background-image:url('${pubUrl(cover.storage_path)}')"></div>${play}</div>`;
+      size=54;
+    }
+    const icon=L.divIcon({className:'',iconSize:[size,size],iconAnchor:[size/2,size/2],html});
     L.marker([c.lat,c.lng],{icon}).addTo(photoLayer).on('click',()=>openGallery(ci));
   });
 }
@@ -1711,13 +1776,17 @@ function placeName(lat,lng){
 
 /* ---- Galerie d'un lieu (dans la fiche partagée) ---- */
 function galItems(ci){ return clusters[ci].items.slice().sort((a,b)=>new Date(a.taken_at)-new Date(b.taken_at)); }
+/* Emojis de réactions posés directement sur la photo */
+function rxCounts(p){ const c={}; (p._rx||[]).forEach(r=>c[r.emoji]=(c[r.emoji]||0)+1);
+  return Object.entries(c).sort((a,b)=>b[1]-a[1]); }
+function rxBadges(p,cls,max){ const list=rxCounts(p).slice(0,max||3); if(!list.length) return '';
+  return `<span class="${cls}">${list.map(([e,n])=>`<span class="rxb">${e}${n>1?`<b>${n}</b>`:''}</span>`).join('')}</span>`; }
 function galCard(p,i){
-  const total=p._rx.length;
   return `<div class="gcard" data-i="${i}">
     <img src="${pubUrl(p.storage_path)}" loading="lazy" alt="Photo de ${esc(p.author_name)}">
     <span class="who"><i style="background:${esc(p.author_color)}"></i>${esc(p.author_name)}</span>
     ${p.kind==='video'?'<span class="play-ic">▶</span>':''}
-    ${total?`<span class="rc">❤ ${total}</span>`:''}
+    ${rxBadges(p,'rx-badges',3)}
   </div>`;
 }
 function openGallery(ci){
@@ -1740,12 +1809,15 @@ let lbItems=[], lbIdx=0, diapoTimer=null, lbReturnFocus=null;
 function openLightbox(items, idx){ lbReturnFocus=document.activeElement; lbItems=items; lbIdx=idx; renderLightbox(); lb.classList.add('open'); document.getElementById('lbClose').focus({preventScroll:true}); }
 function closeLightbox(){ lb.classList.remove('open'); document.getElementById('lbMedia').innerHTML=''; document.getElementById('emojiPop').classList.remove('open'); if(diapoTimer){clearInterval(diapoTimer);diapoTimer=null;}
   if(lbReturnFocus && lbReturnFocus.focus){ try{ lbReturnFocus.focus({preventScroll:true}); }catch(_){} } }
-function renderLightbox(){
+function renderLightbox(dir){
   const p=lbItems[lbIdx]; if(!p) return;
   const media=document.getElementById('lbMedia');
+  media.classList.toggle('anim-next', dir>0);
+  media.classList.toggle('anim-prev', dir<0);
   media.innerHTML = p.kind==='video'
     ? `<video src="${pubUrl(p.original_path||p.storage_path)}" controls playsinline ${diapoTimer?'':'autoplay'}></video>`
     : `<img src="${pubUrl(p.storage_path)}" alt="${p.caption?esc(p.caption):('Photo de '+esc(p.author_name))}">`;
+  media.insertAdjacentHTML('beforeend', rxBadges(p,'lb-rx',6));   // emojis en haut de la photo
   const mine = p.author===myId;
   const ds = new Date(p.taken_at).toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
   const counts={}; p._rx.forEach(r=>counts[r.emoji]=(counts[r.emoji]||0)+1);
@@ -1769,10 +1841,19 @@ function renderLightbox(){
   document.getElementById('rxMore').onclick=()=>toggleEmojiPop(p);
   if(mine){ document.getElementById('lbEdit').onclick=()=>editCaption(p); document.getElementById('lbDel').onclick=()=>deletePhoto(p); }
 }
-function lbGo(d){ const n=lbIdx+d; if(n<0||n>=lbItems.length) return; lbIdx=n; renderLightbox(); }
+function lbGo(d){ const n=lbIdx+d; if(n<0||n>=lbItems.length) return; lbIdx=n; renderLightbox(d); }
 document.getElementById('lbClose').onclick=closeLightbox;
 document.getElementById('lbPrev').onclick=()=>lbGo(-1);
 document.getElementById('lbNext').onclick=()=>lbGo(1);
+/* Glisser vers la gauche/droite pour changer de photo */
+(function(){ const m=document.getElementById('lbMedia'); let sx=0,sy=0,st=0;
+  m.addEventListener('touchstart',e=>{ const t=e.changedTouches[0]; sx=t.clientX; sy=t.clientY; st=Date.now(); },{passive:true});
+  m.addEventListener('touchend',e=>{ const t=e.changedTouches[0]; const dx=t.clientX-sx, dy=t.clientY-sy;
+    if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)*1.4 && Date.now()-st<600){
+      if(diapoTimer){ clearInterval(diapoTimer); diapoTimer=null; }   // le geste reprend la main sur le diaporama
+      lbGo(dx<0?1:-1);
+    } },{passive:true});
+})();
 
 function toggleEmojiPop(p){
   const pop=document.getElementById('emojiPop');
@@ -1872,7 +1953,7 @@ function manualPlace(file){
 }
 async function handleFile(file,n,total){
   const isVideo=(file.type||'').startsWith('video');
-  uprogShow(`${n}/${total} — lecture…`,8);
+  uprogShow(`${n}/${total} — lecture…`,10);
   let lat=null,lng=null,taken=null,placed='manual';
   if(!isVideo && window.exifr){
     try{ const ex=await exifr.parse(file,{gps:true}).catch(()=>null);
@@ -1881,16 +1962,15 @@ async function handleFile(file,n,total){
   }
   if(!taken) taken = file.lastModified? new Date(file.lastModified): new Date();
   if(lat==null){ const pos=await manualPlace(file); if(!pos) return; lat=pos.lat; lng=pos.lng; placed='manual'; }
-  uprogShow(`${n}/${total} — préparation…`,30);
+  uprogShow(`${n}/${total} — préparation…`,35);
   let displayBlob=null, w=null, h=null;
   if(isVideo){ displayBlob=await videoPoster(file).catch(()=>null); }
   else{ try{ const c=await compress(file,1600,0.82); displayBlob=c.blob; w=c.w; h=c.h; }catch(_){ displayBlob=file; } }
   const id=uuid();
   const ext=((file.name||'').split('.').pop()||'bin').toLowerCase().replace(/[^a-z0-9]/g,'')||'bin';
   const originalPath=`original/${id}.${ext}`;
-  uprogShow(`${n}/${total} — envoi de l'original…`,50);
-  const up1=await sb.storage.from('sejour').upload(originalPath,file,{contentType:file.type||'application/octet-stream'});
-  if(up1.error) throw up1.error;
+  // 1) On envoie D'ABORD la version légère (rapide) — c'est elle qui s'affiche
+  uprogShow(`${n}/${total} — envoi…`,60);
   let storagePath;
   if(isVideo){ storagePath=`poster/${id}.jpg`;
     if(displayBlob){ const u=await sb.storage.from('sejour').upload(storagePath,displayBlob,{contentType:'image/jpeg'}); if(u.error) storagePath=originalPath; }
@@ -1899,13 +1979,27 @@ async function handleFile(file,n,total){
     const u=await sb.storage.from('sejour').upload(storagePath,displayBlob,{contentType:(displayBlob===file?(file.type||'image/jpeg'):'image/jpeg')});
     if(u.error) throw u.error;
   }
-  uprogShow(`${n}/${total} — enregistrement…`,85);
+  // 2) On enregistre la ligne : la photo apparaît TOUT DE SUITE sur la carte
   const me=getMe();
-  const ins=await sb.from('photos').insert({ author:myId, author_name:me.pseudo, author_color:me.color,
+  const {data:row,error}=await sb.from('photos').insert({ author:myId, author_name:me.pseudo, author_color:me.color,
     kind:isVideo?'video':'photo', storage_path:storagePath, original_path:originalPath,
-    lat, lng, placed, taken_at:new Date(taken).toISOString(), width:w, height:h });
-  if(ins.error) throw ins.error;
+    lat, lng, placed, taken_at:new Date(taken).toISOString(), width:w, height:h }).select().single();
+  if(error) throw error;
+  row._rx=[]; photos.push(row); renderPhotos(); updateStorage();
   uprogShow(`${n}/${total} — ✓`,100);
+  // 3) L'ORIGINAL plein résolution (le plus lourd) part en arrière-plan, sans bloquer
+  bgUploads.push(uploadOriginalBg(originalPath, file, row.id, isVideo));
+}
+async function uploadOriginalBg(path,file,rowId,isVideo){
+  try{
+    const {error}=await sb.storage.from('sejour').upload(path,file,{contentType:file.type||'application/octet-stream'});
+    if(error) throw error;
+  }catch(e){ console.warn('Envoi de l’original en arrière-plan échoué',e);
+    // La version légère est déjà en ligne : on retire juste la référence à l'original manquant (photos)
+    if(!isVideo){ try{ await sb.from('photos').update({original_path:null}).eq('id',rowId); }catch(_){}
+      photos.forEach(p=>{ if(p.id===rowId) p.original_path=null; }); }
+    toast('Une photo est en ligne, mais l’envoi de son original n’a pas abouti');
+  }
 }
 
 /* ---- Fin de séjour : journal, diaporama, album ---- */
@@ -1923,6 +2017,7 @@ function buildRecap(){
   const days=Object.keys(byDay).sort();
   let h=`<div class="recap-actions">
     <button class="recap-btn primary" id="recDiapo"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Diaporama</button>
+    <button class="recap-btn" id="recTrajet"><svg viewBox="0 0 24 24"><circle cx="6" cy="19" r="2.4"/><circle cx="18" cy="5" r="2.4"/><path d="M8.2 18.2C13 17 5 10 11 8.4c5-1.3 4.2-2.9 5.6-2.9"/></svg>Rejouer le trajet</button>
     <button class="recap-btn" id="recAlbum"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Album (originaux)</button>
   </div>`;
   days.forEach(k=>{
@@ -1933,6 +2028,7 @@ function buildRecap(){
   });
   el.innerHTML=h;
   document.getElementById('recDiapo').onclick=startDiapo;
+  document.getElementById('recTrajet').onclick=playRoute;
   document.getElementById('recAlbum').onclick=downloadAlbum;
   el.querySelectorAll('.jgrid .gcard').forEach(g=>g.onclick=()=>{
     const items=byDay[g.dataset.k].sort((a,b)=>new Date(a.taken_at)-new Date(b.taken_at));
