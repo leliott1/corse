@@ -1771,27 +1771,37 @@ function toggleEmojiPop(p){
 }
 async function toggleReaction(p,e){
   if(!sb) return;
-  const mine=p._rx.find(r=>r.member===myId && r.emoji===e);
-  if(mine){ p._rx=p._rx.filter(r=>!(r.member===myId&&r.emoji===e)); renderLightbox();
-    await sb.from('reactions').delete().eq('photo_id',p.id).eq('member',myId).eq('emoji',e); }
-  else{ p._rx.push({photo_id:p.id,member:myId,emoji:e}); renderLightbox();
-    await sb.from('reactions').insert({photo_id:p.id,emoji:e,member:myId}); }
-  renderPhotos();
+  const had = p._rx.find(r=>r.member===myId && r.emoji===e);
+  // maj optimiste
+  if(had) p._rx=p._rx.filter(r=>!(r.member===myId&&r.emoji===e));
+  else p._rx.push({photo_id:p.id,member:myId,emoji:e});
+  renderLightbox(); renderPhotos();
+  const {error} = had
+    ? await sb.from('reactions').delete().eq('photo_id',p.id).eq('member',myId).eq('emoji',e)
+    : await sb.from('reactions').insert({photo_id:p.id,emoji:e,member:myId});
+  if(error){   // échec réseau : on annule la maj optimiste et on prévient
+    if(had) p._rx.push({photo_id:p.id,member:myId,emoji:e});
+    else p._rx=p._rx.filter(r=>!(r.member===myId&&r.emoji===e));
+    renderLightbox(); renderPhotos();
+    toast('Réaction non enregistrée, réessaie');
+  }
 }
 function editCaption(p){
   const cap=document.getElementById('lbCap');
   cap.contentEditable='true'; cap.textContent=p.caption||''; cap.focus();
   const save=async()=>{ cap.removeEventListener('blur',save); cap.contentEditable='false';
-    const v=cap.textContent.trim().slice(0,1000);
-    if(v!==(p.caption||'')){ p.caption=v; await sb.from('photos').update({caption:v}).eq('id',p.id); }
+    const v=cap.textContent.trim().slice(0,1000); const old=p.caption||'';
+    if(v!==old){ p.caption=v; const {error}=await sb.from('photos').update({caption:v}).eq('id',p.id);
+      if(error){ p.caption=old; toast('Légende non enregistrée'); } }
     renderLightbox(); };
   cap.addEventListener('blur',save);
   cap.addEventListener('keydown',ev=>{ if(ev.key==='Enter'){ev.preventDefault(); cap.blur();} });
 }
 async function deletePhoto(p){
   if(!confirm('Supprimer ce souvenir ? (définitif)')) return;
-  await sb.storage.from('sejour').remove([p.storage_path,p.original_path].filter(Boolean));
-  await sb.from('photos').delete().eq('id',p.id);
+  const {error} = await sb.from('photos').delete().eq('id',p.id);
+  if(error){ toast('Suppression impossible, réessaie'); return; }
+  sb.storage.from('sejour').remove([p.storage_path,p.original_path].filter(Boolean));
   photos=photos.filter(x=>x.id!==p.id);
   closeLightbox(); renderPhotos(); updateStorage();
   if(sheet.classList.contains('open')) closeSheet();
