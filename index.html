@@ -632,6 +632,29 @@
   .pmk.stack .tile.top{transform:translate(-50%,-50%);box-shadow:0 6px 16px rgba(9,30,44,.5)}
   .pmk.stack .cnt{top:-4px;right:-4px}
 
+  /* ============ Séjour : position des membres ============ */
+  .memb{
+    position:absolute;transform:translate(-50%,-9px);
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    width:max-content;pointer-events:none;
+  }
+  .memb .dot{
+    width:15px;height:15px;border-radius:50%;position:relative;
+    border:2.5px solid #fff;box-shadow:0 2px 8px rgba(9,30,44,.5);
+  }
+  .memb.me .dot::after{
+    content:'';position:absolute;inset:-8px;border-radius:50%;
+    border:2px solid rgba(255,255,255,.75);
+    animation:pulsePos 2s ease-out infinite;
+  }
+  @keyframes pulsePos{0%{transform:scale(.55);opacity:.9}70%{transform:scale(1.3);opacity:0}100%{opacity:0}}
+  .memb .tag{
+    background:rgba(6,18,26,.72);color:#fff;font-size:9.5px;font-weight:800;
+    padding:2px 8px;border-radius:999px;white-space:nowrap;
+    text-shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+  .memb.old{opacity:.72}
+
   /* ============ Galerie (dans la fiche partagée) ============ */
   .gal-h{display:flex;align-items:baseline;gap:9px;margin:2px 0 12px;flex-wrap:wrap}
   .gal-h .gt{font-size:21px;font-weight:800;letter-spacing:-.02em}
@@ -1654,6 +1677,7 @@ function setMode(m){
     sejourEnter();
   } else {
     if(typeof stopRoute==='function') stopRoute();
+    if(typeof stopPos==='function') stopPos();
     map.removeLayer(photoLayer);
     document.getElementById('recap').classList.remove('open');
     document.getElementById('lb').classList.remove('open');
@@ -1728,7 +1752,76 @@ async function loadPhotos(){
 async function sejourEnter(){
   photoLayer.addTo(map);
   document.getElementById('sejEmpty').style.display='';
-  if(await sejourInit()) await loadPhotos();
+  if(await sejourInit()){ await loadPhotos(); startPos(); }
+}
+
+/* ---- Position des membres : la mienne en direct (GPS du téléphone),
+   celle des autres via un petit fichier positions/{id}.json dans le
+   stockage, poussé ~toutes les 20 s et relu ~toutes les 25 s. ---- */
+const posLayer=L.layerGroup();
+let posWatch=null, posTimer=null, posData={}, myPos=null, lastPush=0, lastPushLL=null;
+function freshTxt(atMs){
+  const d=Date.now()-atMs;
+  if(d<120000) return 'en direct';
+  if(d<3600000) return 'il y a '+Math.max(1,Math.round(d/60000))+' min';
+  return 'il y a '+Math.round(d/3600000)+'h';
+}
+function renderPositions(){
+  posLayer.clearLayers();
+  const me=getMe()||{};
+  if(myPos){
+    const icon=L.divIcon({className:'',iconSize:[0,0],
+      html:`<div class="memb me"><span class="dot" style="background:${esc(me.color||'#FF5324')}"></span><span class="tag">${esc(me.pseudo||'Moi')}</span></div>`});
+    L.marker([myPos.lat,myPos.lng],{icon,zIndexOffset:-200,interactive:false}).addTo(posLayer);
+  }
+  Object.entries(posData).forEach(([uid,p])=>{
+    if(uid===myId || p.lat==null) return;
+    const at=new Date(p.at||0).getTime();
+    if(Date.now()-at>24*3600000) return;                   // trop vieux : on n'affiche plus
+    const vieux=Date.now()-at>120000;
+    const icon=L.divIcon({className:'',iconSize:[0,0],
+      html:`<div class="memb ${vieux?'old':''}"><span class="dot" style="background:${esc(p.color||'#4E6070')}"></span><span class="tag">${esc(p.pseudo||'?')} · ${freshTxt(at)}</span></div>`});
+    L.marker([p.lat,p.lng],{icon,zIndexOffset:-300,interactive:false}).addTo(posLayer);
+  });
+}
+async function pushPos(){
+  if(!sb||!myId||!myPos) return;
+  const me=getMe(); if(!me) return;
+  lastPush=Date.now(); lastPushLL={lat:myPos.lat,lng:myPos.lng};
+  const path=`positions/${myId}.json`;
+  const blob=new Blob([JSON.stringify({pseudo:me.pseudo,color:me.color,lat:myPos.lat,lng:myPos.lng,at:new Date().toISOString()})],{type:'application/json'});
+  try{ await sb.storage.from('sejour').remove([path]); }catch(_){}
+  try{ await sb.storage.from('sejour').upload(path,blob,{contentType:'application/json',cacheControl:'0'}); }catch(_){}
+}
+async function pollPos(){
+  if(!sb) return;
+  try{
+    const {data}=await sb.storage.from('sejour').list('positions',{limit:100});
+    const next={};
+    await Promise.all((data||[]).filter(f=>f.name.endsWith('.json')).map(async f=>{
+      try{ const r=await fetch(pubUrl('positions/'+f.name)+'?t='+Date.now());
+        if(r.ok) next[f.name.slice(0,-5)]=await r.json(); }catch(_){}
+    }));
+    posData=next; renderPositions();
+  }catch(_){}
+}
+function startPos(){
+  if(posWatch!=null || !navigator.geolocation) { posLayer.addTo(map); pollPos(); return; }
+  posLayer.addTo(map);
+  posWatch=navigator.geolocation.watchPosition(g=>{
+    myPos={lat:g.coords.latitude,lng:g.coords.longitude};
+    renderPositions();
+    const bouge=!lastPushLL || Math.hypot(myPos.lat-lastPushLL.lat,myPos.lng-lastPushLL.lng)>0.0003;   // ~30 m
+    if(Date.now()-lastPush>20000 || (bouge&&Date.now()-lastPush>8000) || !lastPushLL) pushPos();
+  },()=>{},{enableHighAccuracy:true,maximumAge:15000,timeout:20000});
+  posTimer=setInterval(pollPos,25000);
+  pollPos();
+}
+function stopPos(){
+  if(posWatch!=null){ try{navigator.geolocation.clearWatch(posWatch);}catch(_){} posWatch=null; }
+  if(posTimer){ clearInterval(posTimer); posTimer=null; }
+  posLayer.clearLayers(); map.removeLayer(posLayer);
+  posData={}; myPos=null;
 }
 
 /* Regroupement à la distance ÉCRAN (comme Photos iPhone) : deux photos se
