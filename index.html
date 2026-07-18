@@ -618,6 +618,27 @@
   .veil-btn:active{transform:scale(.98)}
   .veil-btn[disabled]{opacity:.5;cursor:default;transform:none}
   .veil-err{min-height:18px;font-size:12px;font-weight:800;color:#C8400F;margin-top:10px}
+  /* Étape « créer ou reprendre son profil » (anti-doublons) */
+  .id-choice{display:flex;flex-direction:column;gap:10px;margin:8px 0 4px}
+  .veil-btn.ghost{
+    background:rgba(255,255,255,.65);color:var(--encre);
+    border:1px solid rgba(78,96,112,.28);box-shadow:none;
+  }
+  .pick-list{display:flex;flex-direction:column;gap:8px;max-height:38vh;overflow-y:auto;margin:6px 0 10px}
+  .pick-item{
+    display:flex;align-items:center;gap:11px;padding:9px 13px;min-height:52px;
+    border-radius:15px;border:1px solid rgba(78,96,112,.22);cursor:pointer;
+    background:rgba(255,255,255,.65);
+    font-family:'Nunito',sans-serif;font-size:14.5px;font-weight:800;color:var(--encre);
+    text-align:left;
+  }
+  .pick-item:active{background:rgba(255,255,255,.9)}
+  .pick-item i{width:34px;height:34px;border-radius:50%;flex:0 0 auto;position:relative;overflow:hidden;border:2px solid #fff;box-shadow:0 2px 6px rgba(9,30,44,.2)}
+  .pick-vide{font-size:13px;font-weight:600;color:var(--encre-2);padding:10px 0}
+  .pick-back{
+    background:none;border:0;cursor:pointer;min-height:44px;
+    font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:var(--encre-2);
+  }
   /* Photo de profil (voile identité) */
   .av-pick{
     width:76px;height:76px;border-radius:50%;margin:2px auto 0;display:block;cursor:pointer;
@@ -978,8 +999,17 @@
 <div class="veil" id="ident" hidden>
   <div class="veil-card">
     <h2>Bienvenue&nbsp;! 👋</h2>
-    <p class="lead">Choisis ton pseudo et ta couleur. C'est ce qui apparaîtra à côté de tes photos.</p>
-    <form id="identForm" autocomplete="off">
+    <p class="lead">Ton profil apparaîtra à côté de tes photos.</p>
+    <!-- Étape 1 : éviter les doublons — on reprend son profil s'il existe -->
+    <div class="id-choice" id="identChoice" hidden>
+      <button type="button" class="veil-btn" id="chNew">✨ Créer mon profil</button>
+      <button type="button" class="veil-btn ghost" id="chPick">👤 J'ai déjà un profil</button>
+    </div>
+    <div id="identPick" hidden>
+      <div class="pick-list" id="pickList"></div>
+      <button type="button" class="pick-back" id="pickBack">← Retour</button>
+    </div>
+    <form id="identForm" autocomplete="off" hidden>
       <button type="button" class="av-pick" id="avPick" aria-label="Ajouter ta photo de profil">
         <span id="avEmoji" aria-hidden="true">📷</span>
       </button>
@@ -1720,20 +1750,78 @@ function avIm(uid,ts){
   const t=ts||Math.floor(Date.now()/86400000);       // cache d'un jour max sans horodatage
   return `<img class="avi" src="${pubUrl('avatars/'+uid+'.jpg')}?a=${t}" alt="" onerror="this.remove()">`;
 }
-function openIdent(cb){
+let identMembers=[];   // profils déjà en base, pour la sélection et l'anti-doublon
+function identStep(s){
+  document.getElementById('identChoice').hidden = s!=='choice';
+  document.getElementById('identPick').hidden   = s!=='pick';
+  document.getElementById('identForm').hidden   = s!=='form';
+  if(s==='form') setTimeout(()=>document.getElementById('pseudoField').focus(),150);
+}
+async function openIdent(cb){
   identCb=cb||null;
   const me=getMe();
   if(me){ document.getElementById('pseudoField').value=me.pseudo||''; pickColor=me.color||PALETTE[0]; }
   const av=localStorage.getItem(LS.av);
   if(av){ avPick.style.backgroundImage=`url('${av}')`; avPick.classList.add('has'); }
   ident.hidden=false;
-  setTimeout(()=>document.getElementById('pseudoField').focus(),200);
+  if(me){ identStep('form'); return; }          // profil local existant : simple édition
+  identStep('choice');
+  identMembers=[];
+  try{
+    if(await sejourInit()){
+      const {data}=await sb.from('members').select('id,pseudo,color,created_at').order('created_at',{ascending:false});
+      identMembers=data||[];
+    }
+  }catch(_){}
+  buildPickList();
+  if(!identMembers.length) identStep('form');   // tout premier du groupe : création directe
 }
+function buildPickList(){
+  const box=document.getElementById('pickList'); const vus=new Set();
+  const list=identMembers.filter(m=>{ const k=(m.pseudo||'').trim().toLowerCase();
+    if(!k||vus.has(k)) return false; vus.add(k); return true; });
+  box.innerHTML = list.map(m=>`<button type="button" class="pick-item" data-p="${esc(m.pseudo)}" data-c="${esc(m.color)}" data-id="${esc(m.id)}">
+      <i style="background:${esc(m.color)}">${avIm(m.id)}</i><span>${esc(m.pseudo)}</span></button>`).join('')
+    || '<div class="pick-vide">Aucun profil pour l\'instant — crée le tien !</div>';
+  box.querySelectorAll('.pick-item').forEach(b=>b.onclick=()=>adoptProfile(b.dataset.p,b.dataset.c,b.dataset.id));
+}
+/* Reprendre un profil existant : mêmes pseudo/couleur (+ photo de profil si
+   elle existe), rattachés à l'identité de CET appareil — zéro doublon visible */
+async function adoptProfile(pseudo,color,srcId){
+  pickColor=color||PALETTE[0];
+  localStorage.setItem(LS.me, JSON.stringify({pseudo, color:pickColor}));
+  try{
+    const r=await fetch(pubUrl('avatars/'+srcId+'.jpg')+'?a='+Date.now());
+    if(r.ok){ const b=await r.blob(); const fr=new FileReader();
+      fr.onload=()=>{ localStorage.setItem(LS.av,fr.result);
+        localStorage.setItem(LS.avAt,String(Date.now())); localStorage.setItem(LS.avUp,'');
+        pushAvatar(); };
+      fr.readAsDataURL(b); }
+  }catch(_){}
+  if(sbReady&&myId) sb.from('members').upsert({id:myId, pseudo, color:pickColor});
+  ident.hidden=true;
+  const cb=identCb; identCb=null; if(cb) cb();
+}
+document.getElementById('chNew').onclick =()=>identStep('form');
+document.getElementById('chPick').onclick=()=>identStep('pick');
+document.getElementById('pickBack').onclick=()=>identStep('choice');
 document.getElementById('identForm').addEventListener('submit',e=>{
   e.preventDefault();
   const p=document.getElementById('pseudoField').value.trim();
   if(!p){ document.getElementById('pseudoField').focus(); return; }
+  /* Anti-doublon : ce pseudo existe déjà ? On propose de le reprendre. */
+  const fresh=!getMe();
+  const dbl=fresh && identMembers.find(m=>(m.pseudo||'').trim().toLowerCase()===p.toLowerCase());
+  if(dbl){
+    if(confirm(`« ${dbl.pseudo} » existe déjà. C'est ton profil ?\n\nOK = je le reprends · Annuler = je change de pseudo`)){
+      adoptProfile(dbl.pseudo,dbl.color,dbl.id);
+    }else{
+      document.getElementById('pseudoField').focus();
+    }
+    return;
+  }
   localStorage.setItem(LS.me, JSON.stringify({pseudo:p, color:pickColor}));
+  if(sbReady&&myId) sb.from('members').upsert({id:myId, pseudo:p, color:pickColor});
   ident.hidden=true;
   const cb=identCb; identCb=null; if(cb) cb();
 });
