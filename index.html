@@ -1833,7 +1833,15 @@ async function loadPhotos(){
 async function sejourEnter(){
   photoLayer.addTo(map);
   document.getElementById('sejEmpty').style.display='';
+  posCenterPending=true;                     // au 1er signal GPS : voler vers MOI
   if(await sejourInit()){ await loadPhotos(); startPos(); }
+  /* Pas de GPS au bout de 4 s (refusé, coupé…) : cadrer les photos du séjour */
+  setTimeout(()=>{
+    if(!posCenterPending || mode!=='sejour') return;
+    posCenterPending=false;
+    const pts=photos.filter(p=>p.lat!=null).map(p=>[p.lat,p.lng]);
+    if(pts.length) map.fitBounds(L.latLngBounds(pts).pad(0.25),{maxZoom:13});
+  },4000);
 }
 
 /* ---- Position des membres : la mienne en direct (GPS du téléphone),
@@ -1841,6 +1849,7 @@ async function sejourEnter(){
    stockage, poussé ~toutes les 20 s et relu ~toutes les 25 s. ---- */
 const posLayer=L.layerGroup();
 let posWatch=null, posTimer=null, posData={}, myPos=null, lastPush=0, lastPushLL=null;
+let posCenterPending=false;                  // vrai = centrer la carte sur moi au prochain signal
 function freshTxt(atMs){
   const d=Date.now()-atMs;
   if(d<120000) return 'en direct';
@@ -1895,6 +1904,13 @@ function startPos(){
   posWatch=navigator.geolocation.watchPosition(g=>{
     myPos={lat:g.coords.latitude,lng:g.coords.longitude};
     renderPositions();
+    /* La carte s'ouvre sur MOI, où que je sois (pas forcément la Corse) —
+       sauf si un placement manuel est en cours sous mes doigts */
+    if(posCenterPending && mode==='sejour' && !document.getElementById('placeBanner').classList.contains('open')){
+      posCenterPending=false;
+      const z=Math.max(map.getZoom(),12);
+      if(RM) map.setView([myPos.lat,myPos.lng],z); else map.flyTo([myPos.lat,myPos.lng],z,{duration:.8});
+    }
     const bouge=!lastPushLL || Math.hypot(myPos.lat-lastPushLL.lat,myPos.lng-lastPushLL.lng)>0.0003;   // ~30 m
     if(Date.now()-lastPush>20000 || (bouge&&Date.now()-lastPush>8000) || !lastPushLL) pushPos();
   },()=>{},{enableHighAccuracy:true,maximumAge:15000,timeout:20000});
@@ -1905,7 +1921,7 @@ function stopPos(){
   if(posWatch!=null){ try{navigator.geolocation.clearWatch(posWatch);}catch(_){} posWatch=null; }
   if(posTimer){ clearInterval(posTimer); posTimer=null; }
   posLayer.clearLayers(); map.removeLayer(posLayer);
-  posData={}; myPos=null;
+  posData={}; myPos=null; posCenterPending=false;
 }
 
 /* Regroupement à la distance ÉCRAN (comme Photos iPhone) : deux photos se
