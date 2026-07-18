@@ -620,6 +620,14 @@
   .veil-btn:active{transform:scale(.98)}
   .veil-btn[disabled]{opacity:.5;cursor:default;transform:none}
   .veil-err{min-height:18px;font-size:12px;font-weight:800;color:#C8400F;margin-top:10px}
+  /* Connexion : la bande au complet, on tape son prénom */
+  .who-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:2px 0 12px}
+  .who-chip{
+    padding:9px 15px;min-height:40px;border-radius:999px;cursor:pointer;
+    border:1px solid rgba(78,96,112,.28);background:rgba(255,255,255,.65);
+    font-family:'Nunito',sans-serif;font-size:13.5px;font-weight:800;color:var(--encre);
+  }
+  .who-chip.on{background:var(--corail-btn);color:#fff;border-color:transparent}
   /* Étape « créer ou reprendre son profil » (anti-doublons) */
   .id-choice{display:flex;flex-direction:column;gap:10px;margin:8px 0 4px}
   .veil-btn.ghost{
@@ -989,6 +997,7 @@
     <h2>Corse du <span>Sud</span></h2>
     <p class="lead">Notre carnet de voyage privé. Ton identifiant + le mot de passe de la bande.</p>
     <form id="gateForm" autocomplete="on">
+      <div class="who-chips" id="whoChips" role="group" aria-label="Qui es-tu ?"></div>
       <input class="field" id="loginId" type="text" autocapitalize="none" autocorrect="off"
              autocomplete="username" placeholder="Ton identifiant" aria-label="Ton identifiant" maxlength="30">
       <input class="field" id="codeField" type="password" autocomplete="current-password"
@@ -1678,6 +1687,21 @@ function toast(msg){
 const slugId=s=>(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
   .replace(/[^a-z0-9]+/g,'.').replace(/^\.+|\.+$/g,'');
 const mailOf=id=>slugId(id)+'@corse2026.fr';
+/* La bande au complet — les seuls comptes qui existent (inscriptions fermées) */
+const BANDE=['Axelle','Sara','Inès','Hugo','Christophe','Eliott'];
+(function(){
+  const box=document.getElementById('whoChips');
+  BANDE.forEach(n=>{
+    const b=document.createElement('button');
+    b.type='button'; b.className='who-chip'; b.textContent=n;
+    b.onclick=()=>{
+      document.getElementById('loginId').value=n;
+      box.querySelectorAll('.who-chip').forEach(c=>c.classList.toggle('on',c===b));
+      document.getElementById('codeField').focus();
+    };
+    box.appendChild(b);
+  });
+})();
 async function apresSession(uid){
   myId=uid;
   /* profil déjà créé (autre appareil / réinstallation) ? on le récupère */
@@ -1723,7 +1747,11 @@ document.getElementById('gateForm').addEventListener('submit',async e=>{
     if(error){ ({data,error}=await sb.auth.signUp({email,password})); if(error) throw error; }
     localStorage.setItem(LS.ident,id);
     await apresSession(data.session? data.session.user.id : data.user.id);
-  }catch(ex){ console.warn(ex); err.textContent='Connexion impossible, réessaie'; }
+  }catch(ex){ console.warn(ex);
+    err.textContent=/signup|credentials/i.test(ex.message||'')
+      ? 'Identifiant inconnu — tape ton prénom dans la liste ☝️'
+      : 'Connexion impossible, réessaie';
+  }
   btn.disabled=false;
 });
 
