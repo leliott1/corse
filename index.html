@@ -2122,9 +2122,12 @@ function buildRecap(){
   document.getElementById('recDiapo').onclick=startDiapo;
   document.getElementById('recTrajet').onclick=playRoute;
   document.getElementById('recAlbum').onclick=downloadAlbum;
+  /* Depuis le journal, la visionneuse embarque TOUT le séjour en chronologie :
+     on glisse d'un jour à l'autre sans s'arrêter aux frontières du jour. */
+  const tous=photos.slice().sort((a,b)=>new Date(a.taken_at)-new Date(b.taken_at));
   el.querySelectorAll('.jgrid .gcard').forEach(g=>g.onclick=()=>{
-    const items=byDay[g.dataset.k].sort((a,b)=>new Date(a.taken_at)-new Date(b.taken_at));
-    openLightbox(items, parseInt(g.dataset.i));
+    const p=byDay[g.dataset.k].sort((a,b)=>new Date(a.taken_at)-new Date(b.taken_at))[parseInt(g.dataset.i)];
+    openLightbox(tous, Math.max(0,tous.findIndex(x=>x.id===p.id)));
   });
 }
 function startDiapo(){
