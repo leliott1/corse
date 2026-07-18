@@ -540,6 +540,20 @@
   }
   .sej-add svg{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
   .sej-add:active{transform:scale(.95)}
+  .sej-add[aria-expanded="true"]{transform:rotate(45deg)}
+  /* Menu du + : appareil photo direct, ou pellicule — rien d'autre */
+  .add-menu{
+    position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom) + 148px);
+    display:flex;flex-direction:column;gap:8px;padding:8px;border-radius:20px;z-index:5;
+  }
+  .add-menu[hidden]{display:none}
+  .add-menu button{
+    display:flex;align-items:center;gap:10px;border:0;cursor:pointer;background:transparent;
+    color:var(--encre);font-family:'Nunito',sans-serif;font-size:13.5px;font-weight:800;
+    padding:10px 14px;border-radius:14px;min-height:44px;white-space:nowrap;
+  }
+  .add-menu button:active{background:rgba(255,255,255,.75)}
+  .add-menu button span{font-size:19px}
   .sej-album{
     position:absolute;left:12px;bottom:calc(env(safe-area-inset-bottom) + 20px);
     min-height:48px;padding:11px 16px;border-radius:999px;cursor:pointer;
@@ -598,6 +612,15 @@
   .veil-btn:active{transform:scale(.98)}
   .veil-btn[disabled]{opacity:.5;cursor:default;transform:none}
   .veil-err{min-height:18px;font-size:12px;font-weight:800;color:#C8400F;margin-top:10px}
+  /* Photo de profil (voile identité) */
+  .av-pick{
+    width:76px;height:76px;border-radius:50%;margin:2px auto 0;display:block;cursor:pointer;
+    border:2.5px dashed rgba(78,96,112,.5);background:rgba(255,255,255,.55) center/cover no-repeat;
+    font-size:26px;line-height:1;color:var(--encre-2);
+  }
+  .av-pick.has{border-style:solid;border-color:#fff;box-shadow:0 4px 14px rgba(9,30,44,.25)}
+  .av-pick.has #avEmoji{display:none}
+  .av-hint{font-size:11.5px;font-weight:700;color:var(--encre-2);margin:6px 0 10px;text-align:center}
   .swatches{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:6px 0 4px}
   .swatch{
     width:40px;height:40px;border-radius:50%;cursor:pointer;border:3px solid transparent;
@@ -654,6 +677,9 @@
     text-shadow:0 1px 2px rgba(0,0,0,.4);
   }
   .memb.old{opacity:.72}
+  /* Avatar dans les pastilles rondes (repli : la couleur reste dessous) */
+  .memb .dot,.gcard .who i,.lb-who i{position:relative;overflow:hidden}
+  .avi{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
 
   /* ============ Galerie (dans la fiche partagée) ============ */
   .gal-h{display:flex;align-items:baseline;gap:9px;margin:2px 0 12px;flex-wrap:wrap}
@@ -874,9 +900,15 @@
     Récap
   </button>
   <div class="sej-storage glass" id="sejStorage" hidden></div>
-  <button class="sej-add" id="sejAdd" aria-label="Ajouter des photos ou vidéos">
+  <button class="sej-add" id="sejAdd" aria-label="Ajouter des photos ou vidéos" aria-expanded="false">
     <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </button>
+  <!-- Deux chemins seulement : l'appareil photo (direct) ou la pellicule -->
+  <div class="add-menu glass" id="addMenu" hidden>
+    <button id="addCam"><span>📷</span>Prendre une photo</button>
+    <button id="addLib"><span>🖼️</span>Pellicule</button>
+  </div>
+  <input type="file" id="sejFileCam" accept="image/*,video/*" capture="environment" hidden>
   <input type="file" id="sejFile" accept="image/*,video/*" multiple hidden>
 </div>
 
@@ -942,6 +974,11 @@
     <h2>Bienvenue&nbsp;! 👋</h2>
     <p class="lead">Choisis ton pseudo et ta couleur. C'est ce qui apparaîtra à côté de tes photos.</p>
     <form id="identForm" autocomplete="off">
+      <button type="button" class="av-pick" id="avPick" aria-label="Ajouter ta photo de profil">
+        <span id="avEmoji" aria-hidden="true">📷</span>
+      </button>
+      <div class="av-hint">Ta photo de profil <small>(optionnel)</small></div>
+      <input type="file" id="avFile" accept="image/*" hidden>
       <input class="field" id="pseudoField" type="text" placeholder="Ton pseudo"
              aria-label="Ton pseudo" maxlength="30">
       <div class="swatches" id="swatches" role="radiogroup" aria-label="Ta couleur"></div>
@@ -1585,7 +1622,7 @@ const CONFIG = {
   SB_KEY: 'sb_publishable_dqz7U3qZwxY2CxA9ROoWkA_vFEOxBdH'  // clé publique (safe côté client)
 };
 
-const LS = { ok:'corse_ok', me:'corse_me' };
+const LS = { ok:'corse_ok', me:'corse_me', av:'corse_av', avAt:'corse_av_at', avUp:'corse_av_up' };
 const gate  = document.getElementById('gate');
 const ident = document.getElementById('ident');
 
@@ -1642,10 +1679,47 @@ let identCb=null;
   });
 })();
 function getMe(){ try{return JSON.parse(localStorage.getItem(LS.me)||'null');}catch(_){return null;} }
+/* --- Photo de profil : gardée en local (mini JPEG), envoyée au serveur
+   à la première connexion du séjour. Affichée partout avec repli couleur. --- */
+const avPick=document.getElementById('avPick');
+document.getElementById('avPick').onclick=()=>document.getElementById('avFile').click();
+document.getElementById('avFile').addEventListener('change', async e=>{
+  const f=e.target.files[0]; e.target.value='';
+  if(!f) return;
+  try{
+    const c=await compress(f,256,0.82);
+    const fr=new FileReader();
+    fr.onload=()=>{ localStorage.setItem(LS.av,fr.result);
+      localStorage.setItem(LS.avAt,String(Date.now())); localStorage.setItem(LS.avUp,'');
+      avPick.style.backgroundImage=`url('${fr.result}')`; avPick.classList.add('has');
+      if(sbReady) pushAvatar();                      // déjà connecté : envoi direct
+    };
+    fr.readAsDataURL(c.blob);
+  }catch(_){ toast('Photo illisible, réessaie'); }
+});
+async function pushAvatar(){
+  const d=localStorage.getItem(LS.av);
+  if(!sb||!myId||!d||localStorage.getItem(LS.avUp)==='1') return;
+  try{
+    const blob=await (await fetch(d)).blob();
+    const path=`avatars/${myId}.jpg`;
+    try{ await sb.storage.from('sejour').remove([path]); }catch(_){}
+    const {error}=await sb.storage.from('sejour').upload(path,blob,{contentType:'image/jpeg',cacheControl:'0'});
+    if(!error) localStorage.setItem(LS.avUp,'1');
+  }catch(_){}
+}
+/* Vignette avatar d'un membre, avec repli silencieux sur la pastille couleur */
+function avIm(uid,ts){
+  if(!uid) return '';
+  const t=ts||Math.floor(Date.now()/86400000);       // cache d'un jour max sans horodatage
+  return `<img class="avi" src="${pubUrl('avatars/'+uid+'.jpg')}?a=${t}" alt="" onerror="this.remove()">`;
+}
 function openIdent(cb){
   identCb=cb||null;
   const me=getMe();
   if(me){ document.getElementById('pseudoField').value=me.pseudo||''; pickColor=me.color||PALETTE[0]; }
+  const av=localStorage.getItem(LS.av);
+  if(av){ avPick.style.backgroundImage=`url('${av}')`; avPick.classList.add('has'); }
   ident.hidden=false;
   setTimeout(()=>document.getElementById('pseudoField').focus(),200);
 }
@@ -1725,6 +1799,7 @@ async function sejourInit(){
     if(!session){ const {data,error}=await sb.auth.signInAnonymously(); if(error) throw error; session=data.session; }
     myId = session.user.id;
     const me=getMe(); if(me) await sb.from('members').upsert({id:myId, pseudo:me.pseudo, color:me.color});
+    pushAvatar();                                    // photo de profil en attente d'envoi
     subscribeRealtime();
     sbReady=true; return true;
   }catch(e){ console.warn(e); toast('Connexion au serveur impossible'); return false; }
@@ -1770,8 +1845,10 @@ function renderPositions(){
   posLayer.clearLayers();
   const me=getMe()||{};
   if(myPos){
+    const mienne=localStorage.getItem(LS.av);
+    const dedans=mienne?`<img class="avi" src="${mienne}" alt="">`:'';
     const icon=L.divIcon({className:'',iconSize:[0,0],
-      html:`<div class="memb me"><span class="dot" style="background:${esc(me.color||'#FF5324')}"></span><span class="tag">${esc(me.pseudo||'Moi')}</span></div>`});
+      html:`<div class="memb me"><span class="dot" style="background:${esc(me.color||'#FF5324')}">${dedans}</span><span class="tag">${esc(me.pseudo||'Moi')}</span></div>`});
     L.marker([myPos.lat,myPos.lng],{icon,zIndexOffset:-200,interactive:false}).addTo(posLayer);
   }
   Object.entries(posData).forEach(([uid,p])=>{
@@ -1780,7 +1857,7 @@ function renderPositions(){
     if(Date.now()-at>24*3600000) return;                   // trop vieux : on n'affiche plus
     const vieux=Date.now()-at>120000;
     const icon=L.divIcon({className:'',iconSize:[0,0],
-      html:`<div class="memb ${vieux?'old':''}"><span class="dot" style="background:${esc(p.color||'#4E6070')}"></span><span class="tag">${esc(p.pseudo||'?')} · ${freshTxt(at)}</span></div>`});
+      html:`<div class="memb ${vieux?'old':''}"><span class="dot" style="background:${esc(p.color||'#4E6070')}">${p.av?avIm(uid,p.av):''}</span><span class="tag">${esc(p.pseudo||'?')} · ${freshTxt(at)}</span></div>`});
     L.marker([p.lat,p.lng],{icon,zIndexOffset:-300,interactive:false}).addTo(posLayer);
   });
 }
@@ -1789,7 +1866,8 @@ async function pushPos(){
   const me=getMe(); if(!me) return;
   lastPush=Date.now(); lastPushLL={lat:myPos.lat,lng:myPos.lng};
   const path=`positions/${myId}.json`;
-  const blob=new Blob([JSON.stringify({pseudo:me.pseudo,color:me.color,lat:myPos.lat,lng:myPos.lng,at:new Date().toISOString()})],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({pseudo:me.pseudo,color:me.color,lat:myPos.lat,lng:myPos.lng,
+    at:new Date().toISOString(), av:localStorage.getItem(LS.avUp)==='1'?(localStorage.getItem(LS.avAt)||null):null})],{type:'application/json'});
   try{ await sb.storage.from('sejour').remove([path]); }catch(_){}
   try{ await sb.storage.from('sejour').upload(path,blob,{contentType:'application/json',cacheControl:'0'}); }catch(_){}
 }
@@ -1890,7 +1968,7 @@ function rxBadges(p,cls,max){ const list=rxCounts(p).slice(0,max||3); if(!list.l
 function galCard(p,i){
   return `<div class="gcard" data-i="${i}">
     <img src="${pubUrl(p.storage_path)}" loading="lazy" alt="Photo de ${esc(p.author_name)}">
-    <span class="who"><i style="background:${esc(p.author_color)}"></i>${esc(p.author_name)}</span>
+    <span class="who"><i style="background:${esc(p.author_color)}">${avIm(p.author)}</i>${esc(p.author_name)}</span>
     ${p.kind==='video'?'<span class="play-ic">▶</span>':''}
     ${rxBadges(p,'rx-badges',3)}
   </div>`;
@@ -1931,7 +2009,7 @@ function renderLightbox(dir){
   const extra=Object.keys(counts).filter(e=>!REACT_QUICK.includes(e));
   const btn=e=>`<button class="rxbtn ${mySet.has(e)?'on':''}" data-e="${e}">${e}${counts[e]?`<span class="n">${counts[e]}</span>`:''}</button>`;
   document.getElementById('lbBar').innerHTML = `
-    <div class="lb-who"><i style="background:${esc(p.author_color)}"></i>${esc(p.author_name)}<span class="date">${ds}</span></div>
+    <div class="lb-who"><i style="background:${esc(p.author_color)}">${avIm(p.author)}</i>${esc(p.author_name)}<span class="date">${ds}</span></div>
     <div class="lb-cap" id="lbCap">${p.caption?esc(p.caption):(mine?'<span style="opacity:.5">Ajoute une légende…</span>':'')}</div>
     <div class="lb-actions">
       ${REACT_QUICK.map(btn).join('')}${extra.map(btn).join('')}
@@ -2037,18 +2115,32 @@ const uprog=document.getElementById('uprog');
 function uprogShow(t,pct){ uprog.classList.add('open'); document.getElementById('uprogTxt').textContent=t; document.getElementById('uprogBar').style.width=(pct||0)+'%'; }
 function uprogHide(){ uprog.classList.remove('open'); }
 
+/* Le + ouvre un choix à deux : appareil photo (direct) ou pellicule */
+const addMenu=document.getElementById('addMenu');
+function toggleAddMenu(force){
+  const open=force!=null? force : addMenu.hidden;
+  addMenu.hidden=!open;
+  document.getElementById('sejAdd').setAttribute('aria-expanded',String(open));
+}
 document.getElementById('sejAdd').onclick=async()=>{
   if(!await sejourInit()) return;
-  document.getElementById('sejFile').click();
+  toggleAddMenu();
 };
-document.getElementById('sejFile').addEventListener('change', async e=>{
+document.getElementById('addCam').onclick=()=>{ toggleAddMenu(false); document.getElementById('sejFileCam').click(); };
+document.getElementById('addLib').onclick=()=>{ toggleAddMenu(false); document.getElementById('sejFile').click(); };
+document.addEventListener('click',e=>{                       // tap ailleurs : le menu se referme
+  if(!addMenu.hidden && !addMenu.contains(e.target) && e.target.closest('#sejAdd')==null) toggleAddMenu(false);
+});
+async function onFilesPicked(e){
   const files=[...e.target.files]; e.target.value='';
   if(!files.length) return;
   if(!await sejourInit()) return;
   document.getElementById('sejEmpty').style.display='none';   // dégage l'écran pour le placement
   for(let i=0;i<files.length;i++){ try{ await handleFile(files[i],i+1,files.length); }catch(err){ console.warn(err); toast('Souci avec une photo, on continue'); } }
   uprogHide(); await loadPhotos();
-});
+}
+document.getElementById('sejFile').addEventListener('change', onFilesPicked);
+document.getElementById('sejFileCam').addEventListener('change', onFilesPicked);
 
 async function compress(file,max,q){
   let bmp;
