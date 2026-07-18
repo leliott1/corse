@@ -49,7 +49,9 @@
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   button,a,.card,.row{touch-action:manipulation}
-  html,body{height:100%}
+  /* Plein écran réel : 100dvh couvre aussi les zones sous l'heure et la
+     barre du bas quand la barre translucide est active (app écran d'accueil) */
+  html,body{height:100%;height:100dvh}
   html{-webkit-text-size-adjust:100%}
   body{
     font-family:'Nunito',system-ui,sans-serif;
@@ -57,7 +59,7 @@
     color:var(--encre);
     overflow:hidden;
   }
-  #map{position:absolute;inset:0;background:#C6D4DC}
+  #map{position:fixed;inset:0;height:100dvh;background:#C6D4DC}
 
   /* ---------- Verre : surfaces floutées ---------- */
   .glass{
