@@ -987,10 +987,12 @@
   <div class="veil-card">
     <img class="veil-logo" src="img/icon-192.png" alt="">
     <h2>Corse du <span>Sud</span></h2>
-    <p class="lead">Notre carnet de voyage privé. Entre le code de la bande pour ouvrir la carte et le séjour.</p>
-    <form id="gateForm" autocomplete="off">
-      <input class="field" id="codeField" type="text" inputmode="text" autocapitalize="characters"
-             placeholder="Code de groupe" aria-label="Code de groupe" maxlength="24">
+    <p class="lead">Notre carnet de voyage privé. Ton identifiant + le mot de passe de la bande.</p>
+    <form id="gateForm" autocomplete="on">
+      <input class="field" id="loginId" type="text" autocapitalize="none" autocorrect="off"
+             autocomplete="username" placeholder="Ton identifiant" aria-label="Ton identifiant" maxlength="30">
+      <input class="field" id="codeField" type="password" autocomplete="current-password"
+             placeholder="Mot de passe de la bande" aria-label="Mot de passe de la bande" maxlength="24">
       <button class="veil-btn" id="gateBtn" type="submit">Entrer</button>
     </form>
     <div class="veil-err" id="gateErr" role="alert"></div>
@@ -1001,17 +1003,8 @@
 <div class="veil" id="ident" hidden>
   <div class="veil-card">
     <h2>Bienvenue&nbsp;! 👋</h2>
-    <p class="lead">Ton profil apparaîtra à côté de tes photos.</p>
-    <!-- Étape 1 : éviter les doublons — on reprend son profil s'il existe -->
-    <div class="id-choice" id="identChoice" hidden>
-      <button type="button" class="veil-btn" id="chNew">✨ Créer mon profil</button>
-      <button type="button" class="veil-btn ghost" id="chPick">👤 J'ai déjà un profil</button>
-    </div>
-    <div id="identPick" hidden>
-      <div class="pick-list" id="pickList"></div>
-      <button type="button" class="pick-back" id="pickBack">← Retour</button>
-    </div>
-    <form id="identForm" autocomplete="off" hidden>
+    <p class="lead">Première connexion : ton profil apparaîtra à côté de tes photos.</p>
+    <form id="identForm" autocomplete="off">
       <button type="button" class="av-pick" id="avPick" aria-label="Ajouter ta photo de profil">
         <span id="avEmoji" aria-hidden="true">📷</span>
       </button>
@@ -1660,7 +1653,7 @@ const CONFIG = {
   SB_KEY: 'sb_publishable_dqz7U3qZwxY2CxA9ROoWkA_vFEOxBdH'  // clé publique (safe côté client)
 };
 
-const LS = { ok:'corse_ok', me:'corse_me', av:'corse_av', avAt:'corse_av_at', avUp:'corse_av_up' };
+const LS = { me:'corse_me', ident:'corse_ident', av:'corse_av', avAt:'corse_av_at', avUp:'corse_av_up' };
 const gate  = document.getElementById('gate');
 const ident = document.getElementById('ident');
 
@@ -1679,21 +1672,54 @@ function toast(msg){
   clearTimeout(t._h); t._h=setTimeout(()=>{t.style.opacity='0';},2600);
 }
 
-/* --- Verrou par code (tout le site est derrière) --- */
-if(localStorage.getItem(LS.ok)==='1'){ gate.hidden=true; }
-else { gate.hidden=false; setTimeout(()=>document.getElementById('codeField').focus(),200); }
-
-document.getElementById('gateForm').addEventListener('submit',e=>{
-  e.preventDefault();
-  const v=document.getElementById('codeField').value.trim().toUpperCase();
-  if(v===CONFIG.GROUP_CODE.trim().toUpperCase()){
-    localStorage.setItem(LS.ok,'1');
-    gate.hidden=true;
-    document.getElementById('gateErr').textContent='';
-  } else {
-    document.getElementById('gateErr').textContent='Code incorrect 🤔';
-    document.getElementById('codeField').select();
+/* --- Connexion : identifiant unique + mot de passe commun de la bande.
+   L'identifiant devient un e-mail synthétique (jamais utilisé pour écrire) :
+   même identifiant = même compte sur tous les appareils. --- */
+const slugId=s=>(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
+  .replace(/[^a-z0-9]+/g,'.').replace(/^\.+|\.+$/g,'');
+const mailOf=id=>slugId(id)+'@corse2026.fr';
+async function apresSession(uid){
+  myId=uid;
+  /* profil déjà créé (autre appareil / réinstallation) ? on le récupère */
+  try{
+    const {data:rows}=await sb.from('members').select('pseudo,color').eq('id',uid);
+    if(rows && rows.length){
+      localStorage.setItem(LS.me, JSON.stringify({pseudo:rows[0].pseudo, color:rows[0].color}));
+      gate.hidden=true; return;
+    }
+  }catch(_){}
+  gate.hidden=true;
+  if(!getMe()){                                     // 1re connexion de ce compte : couleur + photo
+    document.getElementById('pseudoField').value=document.getElementById('loginId').value.trim()
+      || localStorage.getItem(LS.ident) || '';
+    openIdent(null);
   }
+}
+(async()=>{
+  if(sb){ const {data:{session}}=await sb.auth.getSession();
+    if(session){ await apresSession(session.user.id); return; } }
+  gate.hidden=false; setTimeout(()=>document.getElementById('loginId').focus(),200);
+})();
+document.getElementById('gateForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const err=document.getElementById('gateErr');
+  const id=document.getElementById('loginId').value.trim();
+  const mdp=document.getElementById('codeField').value.trim();
+  if(!id){ err.textContent='Il te faut un identifiant'; document.getElementById('loginId').focus(); return; }
+  if(mdp.toUpperCase()!==CONFIG.GROUP_CODE.trim().toUpperCase()){
+    err.textContent='Mot de passe incorrect 🤔';
+    document.getElementById('codeField').select(); return;
+  }
+  if(!sb){ err.textContent='Serveur non configuré'; return; }
+  const btn=document.getElementById('gateBtn'); btn.disabled=true; err.textContent='';
+  try{
+    const email=mailOf(id), password=CONFIG.GROUP_CODE;   // mdp canonique : même casse pour tous
+    let {data,error}=await sb.auth.signInWithPassword({email,password});
+    if(error){ ({data,error}=await sb.auth.signUp({email,password})); if(error) throw error; }
+    localStorage.setItem(LS.ident,id);
+    await apresSession(data.session? data.session.user.id : data.user.id);
+  }catch(ex){ console.warn(ex); err.textContent='Connexion impossible, réessaie'; }
+  btn.disabled=false;
 });
 
 /* --- Identité : pseudo + couleur (demandée à la 1re entrée dans le séjour) --- */
@@ -1752,78 +1778,21 @@ function avIm(uid,ts){
   const t=ts||Math.floor(Date.now()/86400000);       // cache d'un jour max sans horodatage
   return `<img class="avi" src="${pubUrl('avatars/'+uid+'.jpg')}?a=${t}" alt="" onerror="this.remove()">`;
 }
-let identMembers=[];   // profils déjà en base, pour la sélection et l'anti-doublon
-function identStep(s){
-  document.getElementById('identChoice').hidden = s!=='choice';
-  document.getElementById('identPick').hidden   = s!=='pick';
-  document.getElementById('identForm').hidden   = s!=='form';
-  if(s==='form') setTimeout(()=>document.getElementById('pseudoField').focus(),150);
-}
-async function openIdent(cb){
+function openIdent(cb){
   identCb=cb||null;
   const me=getMe();
   if(me){ document.getElementById('pseudoField').value=me.pseudo||''; pickColor=me.color||PALETTE[0]; }
   const av=localStorage.getItem(LS.av);
   if(av){ avPick.style.backgroundImage=`url('${av}')`; avPick.classList.add('has'); }
   ident.hidden=false;
-  if(me){ identStep('form'); return; }          // profil local existant : simple édition
-  identStep('choice');
-  identMembers=[];
-  try{
-    if(await sejourInit()){
-      const {data}=await sb.from('members').select('id,pseudo,color,created_at').order('created_at',{ascending:false});
-      identMembers=data||[];
-    }
-  }catch(_){}
-  buildPickList();
-  if(!identMembers.length) identStep('form');   // tout premier du groupe : création directe
+  setTimeout(()=>document.getElementById('pseudoField').focus(),200);
 }
-function buildPickList(){
-  const box=document.getElementById('pickList'); const vus=new Set();
-  const list=identMembers.filter(m=>{ const k=(m.pseudo||'').trim().toLowerCase();
-    if(!k||vus.has(k)) return false; vus.add(k); return true; });
-  box.innerHTML = list.map(m=>`<button type="button" class="pick-item" data-p="${esc(m.pseudo)}" data-c="${esc(m.color)}" data-id="${esc(m.id)}">
-      <i style="background:${esc(m.color)}">${avIm(m.id)}</i><span>${esc(m.pseudo)}</span></button>`).join('')
-    || '<div class="pick-vide">Aucun profil pour l\'instant — crée le tien !</div>';
-  box.querySelectorAll('.pick-item').forEach(b=>b.onclick=()=>adoptProfile(b.dataset.p,b.dataset.c,b.dataset.id));
-}
-/* Reprendre un profil existant : mêmes pseudo/couleur (+ photo de profil si
-   elle existe), rattachés à l'identité de CET appareil — zéro doublon visible */
-async function adoptProfile(pseudo,color,srcId){
-  pickColor=color||PALETTE[0];
-  localStorage.setItem(LS.me, JSON.stringify({pseudo, color:pickColor}));
-  try{
-    const r=await fetch(pubUrl('avatars/'+srcId+'.jpg')+'?a='+Date.now());
-    if(r.ok){ const b=await r.blob(); const fr=new FileReader();
-      fr.onload=()=>{ localStorage.setItem(LS.av,fr.result);
-        localStorage.setItem(LS.avAt,String(Date.now())); localStorage.setItem(LS.avUp,'');
-        pushAvatar(); };
-      fr.readAsDataURL(b); }
-  }catch(_){}
-  if(sbReady&&myId) sb.from('members').upsert({id:myId, pseudo, color:pickColor}).then(()=>{},()=>{});
-  ident.hidden=true;
-  const cb=identCb; identCb=null; if(cb) cb();
-}
-document.getElementById('chNew').onclick =()=>identStep('form');
-document.getElementById('chPick').onclick=()=>identStep('pick');
-document.getElementById('pickBack').onclick=()=>identStep('choice');
 document.getElementById('identForm').addEventListener('submit',e=>{
   e.preventDefault();
   const p=document.getElementById('pseudoField').value.trim();
   if(!p){ document.getElementById('pseudoField').focus(); return; }
-  /* Anti-doublon : ce pseudo existe déjà ? On propose de le reprendre. */
-  const fresh=!getMe();
-  const dbl=fresh && identMembers.find(m=>(m.pseudo||'').trim().toLowerCase()===p.toLowerCase());
-  if(dbl){
-    if(confirm(`« ${dbl.pseudo} » existe déjà. C'est ton profil ?\n\nOK = je le reprends · Annuler = je change de pseudo`)){
-      adoptProfile(dbl.pseudo,dbl.color,dbl.id);
-    }else{
-      document.getElementById('pseudoField').focus();
-    }
-    return;
-  }
   localStorage.setItem(LS.me, JSON.stringify({pseudo:p, color:pickColor}));
-  if(sbReady&&myId) sb.from('members').upsert({id:myId, pseudo:p, color:pickColor}).then(()=>{},()=>{});
+  if(myId&&sb) sb.from('members').upsert({id:myId, pseudo:p, color:pickColor}).then(()=>{},()=>{});
   ident.hidden=true;
   const cb=identCb; identCb=null; if(cb) cb();
 });
@@ -1833,6 +1802,7 @@ let mode='spots';
 document.body.dataset.mode='spots';
 function setMode(m){
   if(m===mode) return;
+  if(m==='sejour' && !gate.hidden) return;             // pas connecté : rien ne s'ouvre
   if(m==='sejour' && !getMe()){ openIdent(()=>setMode('sejour')); return; }
   mode=m;
   document.body.dataset.mode=m;
@@ -1887,17 +1857,19 @@ const esc = s => (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;
 function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
 
 /* ---- Session anonyme + fiche membre ---- */
-/* Le compte de ce téléphone n'existe plus côté serveur (remise à zéro…) :
-   on jette la vieille session et on s'en recrée une, sans rien perdre du
-   profil local (pseudo, couleur, photo re-poussés sous la nouvelle identité). */
+/* La session de ce téléphone n'est plus valable (compte supprimé côté
+   serveur…) : on se reconnecte au MÊME compte avec l'identifiant mémorisé. */
 async function recoverSession(){
+  const id=localStorage.getItem(LS.ident);
+  if(!id) { gate.hidden=false; return false; }
   try{ await sb.auth.signOut(); }catch(_){}
-  const {data,error}=await sb.auth.signInAnonymously();
-  if(error || !data.session) return false;
-  myId=data.session.user.id;
+  const email=mailOf(id), password=CONFIG.GROUP_CODE;
+  let {data,error}=await sb.auth.signInWithPassword({email,password});
+  if(error){ ({data,error}=await sb.auth.signUp({email,password})); if(error){ gate.hidden=false; return false; } }
+  myId = data.session? data.session.user.id : data.user.id;
   const me=getMe();
   if(me){ try{ await sb.from('members').upsert({id:myId, pseudo:me.pseudo, color:me.color}); }catch(_){} }
-  localStorage.setItem(LS.avUp,'');            // la photo de profil repart sous le nouveau compte
+  localStorage.setItem(LS.avUp,'');            // la photo de profil repart avec le compte recréé
   pushAvatar();
   return true;
 }
@@ -1906,11 +1878,9 @@ async function sejourInit(){
   if(sbReady) return true;
   try{
     let {data:{session}} = await sb.auth.getSession();
-    if(session){                               // la session locale est-elle encore valable ?
-      const {error:ue}=await sb.auth.getUser();
-      if(ue){ if(!await recoverSession()) throw ue; session=(await sb.auth.getSession()).data.session; }
-    }
-    if(!session){ const {data,error}=await sb.auth.signInAnonymously(); if(error) throw error; session=data.session; }
+    if(!session){ gate.hidden=false; return false; }   // pas connecté : écran d'entrée
+    const {error:ue}=await sb.auth.getUser();          // la session est-elle encore valable ?
+    if(ue){ if(!await recoverSession()) return false; session=(await sb.auth.getSession()).data.session; }
     myId = session.user.id;
     const me=getMe(); if(me) await sb.from('members').upsert({id:myId, pseudo:me.pseudo, color:me.color});
     pushAvatar();                                    // photo de profil en attente d'envoi
