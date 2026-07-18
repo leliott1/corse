@@ -48,6 +48,8 @@
     --reflet:inset 0 1px 0 rgba(255,255,255,.75);
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  /* hidden doit TOUJOURS gagner, même contre un display:flex de classe */
+  [hidden]{display:none !important}
   button,a,.card,.row{touch-action:manipulation}
   /* Plein écran réel : 100dvh couvre aussi les zones sous l'heure et la
      barre du bas quand la barre translucide est active (app écran d'accueil) */
@@ -94,16 +96,15 @@
        white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
   /* ---------- Filtres ---------- */
-  /* pointer-events:none sur la bande, auto sur les puces : la carte reste
-     cliquable à droite du dernier filtre */
   .filters{
     position:absolute;z-index:1000;left:0;right:0;
     top:calc(env(safe-area-inset-top) + 80px);
     display:flex;gap:8px;overflow-x:auto;padding:4px 12px 10px;
     scrollbar-width:none;overscroll-behavior-x:contain;
-    pointer-events:none;
+    /* la rangée doit capter le doigt pour glisser (iOS n'initie pas le
+       défilement d'un conteneur en pointer-events:none) */
+    touch-action:pan-x;-webkit-overflow-scrolling:touch;
   }
-  .chip{pointer-events:auto}
   .filters::-webkit-scrollbar{display:none}
   .chip{
     flex:0 0 auto;cursor:pointer;
@@ -146,12 +147,11 @@
     position:fixed;z-index:1000;left:0;right:0;
     bottom:calc(env(safe-area-inset-bottom) + 12px);
     display:flex;gap:12px;overflow-x:auto;
+    touch-action:pan-x;-webkit-overflow-scrolling:touch;
     padding:14px calc(50vw - 125px) 8px;
     scroll-snap-type:x mandatory;scrollbar-width:none;
     overscroll-behavior-x:contain;
-    pointer-events:none;
   }
-  .card{pointer-events:auto}
   .cards::-webkit-scrollbar{display:none}
   .card{
     flex:0 0 250px;scroll-snap-align:center;cursor:pointer;
@@ -597,6 +597,8 @@
     background:rgba(255,255,255,.9);
     -webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);
     border:1px solid rgba(255,255,255,.6);box-shadow:0 24px 60px rgba(0,0,0,.4);
+    /* Petits écrans / paysage : la carte défile plutôt que de déborder */
+    max-height:calc(100dvh - 48px);overflow-y:auto;overscroll-behavior:contain;
   }
   .veil-logo{width:76px;height:76px;border-radius:22px;margin:0 auto 14px;display:block;box-shadow:0 10px 24px rgba(0,0,0,.28)}
   .veil-card h2{font-size:21px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
@@ -1798,7 +1800,7 @@ async function adoptProfile(pseudo,color,srcId){
         pushAvatar(); };
       fr.readAsDataURL(b); }
   }catch(_){}
-  if(sbReady&&myId) sb.from('members').upsert({id:myId, pseudo, color:pickColor});
+  if(sbReady&&myId) sb.from('members').upsert({id:myId, pseudo, color:pickColor}).then(()=>{},()=>{});
   ident.hidden=true;
   const cb=identCb; identCb=null; if(cb) cb();
 }
@@ -1821,7 +1823,7 @@ document.getElementById('identForm').addEventListener('submit',e=>{
     return;
   }
   localStorage.setItem(LS.me, JSON.stringify({pseudo:p, color:pickColor}));
-  if(sbReady&&myId) sb.from('members').upsert({id:myId, pseudo:p, color:pickColor});
+  if(sbReady&&myId) sb.from('members').upsert({id:myId, pseudo:p, color:pickColor}).then(()=>{},()=>{});
   ident.hidden=true;
   const cb=identCb; identCb=null; if(cb) cb();
 });
@@ -1947,11 +1949,16 @@ function freshTxt(atMs){
 function renderPositions(){
   posLayer.clearLayers();
   const me=getMe()||{};
+  /* Taille adaptative : petite en vue large, franche en vue rapprochée */
+  const z=map.getZoom();
+  const S=Math.round(Math.min(46, Math.max(18, z*2.6)));           // 18px (loin) → 46px (près)
+  const F=Math.min(13, Math.max(9.5, 5.5+z*0.42)).toFixed(1);      // taille du libellé
+  const dot=(color,inner)=>`<span class="dot" style="width:${S}px;height:${S}px;background:${color}">${inner}</span>`;
   if(myPos){
     const mienne=localStorage.getItem(LS.av);
     const dedans=mienne?`<img class="avi" src="${mienne}" alt="">`:'';
     const icon=L.divIcon({className:'',iconSize:[0,0],
-      html:`<div class="memb me"><span class="dot" style="background:${esc(me.color||'#FF5324')}">${dedans}</span><span class="tag">${esc(me.pseudo||'Moi')}</span></div>`});
+      html:`<div class="memb me" style="transform:translate(-50%,-${Math.round(S*.55)}px)">${dot(esc(me.color||'#FF5324'),dedans)}<span class="tag" style="font-size:${F}px">${esc(me.pseudo||'Moi')}</span></div>`});
     L.marker([myPos.lat,myPos.lng],{icon,zIndexOffset:-200,interactive:false}).addTo(posLayer);
   }
   Object.entries(posData).forEach(([uid,p])=>{
@@ -1960,7 +1967,7 @@ function renderPositions(){
     if(Date.now()-at>24*3600000) return;                   // trop vieux : on n'affiche plus
     const vieux=Date.now()-at>120000;
     const icon=L.divIcon({className:'',iconSize:[0,0],
-      html:`<div class="memb ${vieux?'old':''}"><span class="dot" style="background:${esc(p.color||'#4E6070')}">${p.av?avIm(uid,p.av):''}</span><span class="tag">${esc(p.pseudo||'?')} · ${freshTxt(at)}</span></div>`});
+      html:`<div class="memb ${vieux?'old':''}" style="transform:translate(-50%,-${Math.round(S*.55)}px)">${dot(esc(p.color||'#4E6070'),p.av?avIm(uid,p.av):'')}<span class="tag" style="font-size:${F}px">${esc(p.pseudo||'?')} · ${freshTxt(at)}</span></div>`});
     L.marker([p.lat,p.lng],{icon,zIndexOffset:-300,interactive:false}).addTo(posLayer);
   });
 }
@@ -2030,8 +2037,10 @@ function clusterPhotos(z){
   });
   return out;
 }
-/* Au changement de zoom, les piles se font/défont */
-map.on('zoomend',()=>{ if(mode==='sejour' && photos.length) renderPhotos(); });
+/* Au changement de zoom : les piles se font/défont, les pastilles se redimensionnent */
+map.on('zoomend',()=>{ if(mode!=='sejour') return;
+  if(photos.length) renderPhotos();
+  renderPositions(); });
 function renderPhotos(){
   clusters=clusterPhotos(); photoLayer.clearLayers();
   document.getElementById('sejEmpty').style.display = photos.length? 'none':'';
