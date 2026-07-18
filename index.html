@@ -2053,6 +2053,19 @@ async function handleFile(file,n,total){
         taken=ex.DateTimeOriginal||ex.CreateDate||ex.ModifyDate||null; } }catch(_){}
   }
   if(!taken) taken = file.lastModified? new Date(file.lastModified): new Date();
+  /* Photo/vidéo prise À L'INSTANT depuis l'appli (l'appareil photo du
+     navigateur n'écrit pas le GPS dans le fichier) : on est encore sur
+     place, la position actuelle du téléphone EST le lieu de la photo. */
+  if(lat==null && file.lastModified && (Date.now()-file.lastModified)<10*60*1000){
+    uprogShow(`${n}/${total} — position…`,20);
+    const g=await new Promise(r=>{ if(!navigator.geolocation) return r(null);
+      let fini=false; const rep=v=>{ if(!fini){ fini=true; r(v); } };
+      // délai de secours à nous : le timeout natif ne court PAS tant que la
+      // permission n'est pas répondue (prompt ignoré = blocage sinon)
+      setTimeout(()=>rep(null),8000);
+      navigator.geolocation.getCurrentPosition(p=>rep(p),()=>rep(null),{enableHighAccuracy:true,timeout:6000,maximumAge:30000}); });
+    if(g){ lat=g.coords.latitude; lng=g.coords.longitude; placed='gps'; }
+  }
   if(lat==null){ const pos=await manualPlace(isVideo?displayBlob:file); if(!pos) return; lat=pos.lat; lng=pos.lng; placed='manual'; }
   uprogShow(`${n}/${total} — préparation…`,35);
   if(!isVideo){
