@@ -627,9 +627,9 @@
     border:3px solid #fff;background:#c6d4dc center/cover no-repeat;
     box-shadow:0 4px 12px rgba(9,30,44,.42);transform:translate(-50%,-50%);
   }
-  .pmk.stack .tile:nth-last-child(2){transform:translate(-50%,-50%) rotate(-8deg) translate(-6px,-2px)}
-  .pmk.stack .tile:nth-last-child(3){transform:translate(-50%,-50%) rotate(8deg)  translate(6px,-1px)}
-  .pmk.stack .tile:last-child{transform:translate(-50%,-50%);box-shadow:0 6px 16px rgba(9,30,44,.5)}
+  .pmk.stack .tile.t1{transform:translate(-50%,-50%) rotate(-9deg) translate(-7px,-2px)}
+  .pmk.stack .tile.t2{transform:translate(-50%,-50%) rotate(9deg)  translate(7px,-1px)}
+  .pmk.stack .tile.top{transform:translate(-50%,-50%);box-shadow:0 6px 16px rgba(9,30,44,.5)}
   .pmk.stack .cnt{top:-4px;right:-4px}
 
   /* ============ Galerie (dans la fiche partagée) ============ */
@@ -668,11 +668,13 @@
   .lb-rx .rxb{display:inline-flex;align-items:center;gap:3px;background:rgba(6,14,20,.6);border:1px solid rgba(255,255,255,.14);
     border-radius:999px;padding:4px 9px;font-size:16px;line-height:1;backdrop-filter:blur(6px)}
   .lb-rx .rxb b{color:#fff;font-size:12px;font-weight:800}
-  /* Changement de photo : ça slide (sens selon la navigation) */
-  @keyframes lbNext{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}
-  @keyframes lbPrev{from{transform:translateX(-30px);opacity:0}to{transform:none;opacity:1}}
-  .lb-media.anim-next img,.lb-media.anim-next video{animation:lbNext .26s ease}
-  .lb-media.anim-prev img,.lb-media.anim-prev video{animation:lbPrev .26s ease}
+  /* Changement de photo : vrai glissé (sens selon la navigation) */
+  @keyframes lbNext{from{transform:translateX(82vw);opacity:.3}to{transform:none;opacity:1}}
+  @keyframes lbPrev{from{transform:translateX(-82vw);opacity:.3}to{transform:none;opacity:1}}
+  .lb-media.anim-next img,.lb-media.anim-next video{animation:lbNext .3s cubic-bezier(.22,.8,.32,1)}
+  .lb-media.anim-prev img,.lb-media.anim-prev video{animation:lbPrev .3s cubic-bezier(.22,.8,.32,1)}
+  /* Le doigt entraîne la photo ; le vertical reste au navigateur */
+  .lb-media{touch-action:pan-y}
   .lb-close{
     position:absolute;top:calc(env(safe-area-inset-top) + 8px);right:12px;z-index:3;
     width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.25);cursor:pointer;
@@ -1729,18 +1731,28 @@ async function sejourEnter(){
   if(await sejourInit()) await loadPhotos();
 }
 
-function clusterPhotos(){
-  clusters=[]; const R=0.0035;
+/* Regroupement à la distance ÉCRAN (comme Photos iPhone) : deux photos se
+   superposent en pile quand leurs tuiles se toucheraient au zoom courant.
+   `z` optionnel : zoom de référence (le trajet utilise un zoom fixe). */
+function clusterPhotos(z){
+  const zz = (z!=null)? z : map.getZoom();
+  const R = 48;                                    // rayon en pixels
+  const out=[];
   photos.filter(p=>p.lat!=null&&p.lng!=null).forEach(p=>{
-    let c=clusters.find(c=>Math.abs(c.lat-p.lat)<R && Math.abs(c.lng-p.lng)<R);
-    if(!c){ c={lat:p.lat,lng:p.lng,items:[]}; clusters.push(c); }
+    const pt=map.project([p.lat,p.lng],zz);
+    let c=out.find(c=>{ const q=map.project([c.lat,c.lng],zz);
+      return Math.abs(q.x-pt.x)<R && Math.abs(q.y-pt.y)<R; });
+    if(!c){ c={lat:p.lat,lng:p.lng,items:[]}; out.push(c); }
     c.items.push(p);
     c.lat=c.items.reduce((s,x)=>s+x.lat,0)/c.items.length;
     c.lng=c.items.reduce((s,x)=>s+x.lng,0)/c.items.length;
   });
+  return out;
 }
+/* Au changement de zoom, les piles se font/défont */
+map.on('zoomend',()=>{ if(mode==='sejour' && photos.length) renderPhotos(); });
 function renderPhotos(){
-  clusterPhotos(); photoLayer.clearLayers();
+  clusters=clusterPhotos(); photoLayer.clearLayers();
   document.getElementById('sejEmpty').style.display = photos.length? 'none':'';
   clusters.forEach((c,ci)=>{
     const items=c.items;
@@ -1749,8 +1761,9 @@ function renderPhotos(){
     let html, size;
     if(items.length>1){
       // Pile de tuiles (façon Photos iPhone) : la couverture (dernière) au-dessus et centrée
-      const tiles=items.slice(-3)
-        .map(p=>`<div class="tile" style="background-image:url('${pubUrl(p.storage_path)}')"></div>`).join('');
+      const last3=items.slice(-3);
+      const tiles=last3
+        .map((p,k)=>`<div class="tile ${k===last3.length-1?'top':'t'+(k+1)}" style="background-image:url('${pubUrl(p.storage_path)}')"></div>`).join('');
       html=`<div class="pmk stack">${tiles}<span class="cnt">${items.length}</span>${play}</div>`;
       size=62;
     }else{
@@ -1845,14 +1858,40 @@ function lbGo(d){ const n=lbIdx+d; if(n<0||n>=lbItems.length) return; lbIdx=n; r
 document.getElementById('lbClose').onclick=closeLightbox;
 document.getElementById('lbPrev').onclick=()=>lbGo(-1);
 document.getElementById('lbNext').onclick=()=>lbGo(1);
-/* Glisser vers la gauche/droite pour changer de photo */
-(function(){ const m=document.getElementById('lbMedia'); let sx=0,sy=0,st=0;
-  m.addEventListener('touchstart',e=>{ const t=e.changedTouches[0]; sx=t.clientX; sy=t.clientY; st=Date.now(); },{passive:true});
-  m.addEventListener('touchend',e=>{ const t=e.changedTouches[0]; const dx=t.clientX-sx, dy=t.clientY-sy;
-    if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)*1.4 && Date.now()-st<600){
-      if(diapoTimer){ clearInterval(diapoTimer); diapoTimer=null; }   // le geste reprend la main sur le diaporama
+/* Glisser gauche/droite : la photo SUIT le doigt (façon Photos iPhone),
+   puis part si le geste est franc, sinon revient élastiquement. */
+(function(){
+  const m=document.getElementById('lbMedia');
+  let sx=0,sy=0,st=0,el=null,axis=null;
+  m.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1) return;
+    const t=e.touches[0]; sx=t.clientX; sy=t.clientY; st=Date.now(); axis=null;
+    el=m.querySelector('img');                    // suivi du doigt : images (la vidéo garde ses contrôles)
+    if(el){ el.style.transition='none'; }
+  },{passive:true});
+  m.addEventListener('touchmove',e=>{
+    if(!el || e.touches.length!==1) return;
+    const t=e.touches[0]; const dx=t.clientX-sx, dy=t.clientY-sy;
+    if(!axis) axis = Math.abs(dx)>Math.abs(dy)? 'x':'y';
+    if(axis!=='x') return;
+    const bloque=(dx>0&&lbIdx===0)||(dx<0&&lbIdx===lbItems.length-1);
+    el.style.transform=`translateX(${bloque?dx/3:dx}px)`;   // résistance en bout de série
+  },{passive:true});
+  m.addEventListener('touchend',e=>{
+    const t=e.changedTouches[0]; const dx=t.clientX-sx, dy=t.clientY-sy;
+    const rapide=Date.now()-st<500;
+    const franc = Math.abs(dx)>Math.abs(dy)*1.2 && (Math.abs(dx)>70 || (rapide&&Math.abs(dx)>40));
+    const possible = dx<0? lbIdx<lbItems.length-1 : lbIdx>0;
+    if(franc && possible){
+      if(diapoTimer){ clearInterval(diapoTimer); diapoTimer=null; }  // le geste reprend la main sur le diaporama
       lbGo(dx<0?1:-1);
-    } },{passive:true});
+    }else if(el){                                  // retour élastique
+      el.style.transition='transform .22s ease';
+      el.style.transform='translateX(0px)';
+    }
+    el=null;
+  },{passive:true});
+  m.addEventListener('touchcancel',()=>{ if(el){ el.style.transition='transform .22s ease'; el.style.transform='translateX(0px)'; el=null; } },{passive:true});
 })();
 
 function toggleEmojiPop(p){
@@ -2169,8 +2208,8 @@ function vehIcon(emoji){
 function playRoute(){
   if(routeEnCours) return;
   recap.classList.remove('open');
-  clusterPhotos();
-  const etapes=clusters
+  /* Étapes à zoom de référence fixe : le trajet ne dépend pas du zoom d'affichage */
+  const etapes=clusterPhotos(13)
     .map(c=>({lat:c.lat,lng:c.lng,debut:Math.min(...c.items.map(p=>new Date(p.taken_at).getTime()))}))
     .sort((a,b)=>a.debut-b.debut);
   if(etapes.length<2){ toast('Il faut des photos à au moins 2 endroits'); return; }
