@@ -143,7 +143,7 @@
   /* La bande laisse passer les taps vers la carte et le zoom dans les
      gouttières vides ; seules les cartes elles-mêmes sont interactives */
   .cards{
-    position:absolute;z-index:1000;left:0;right:0;
+    position:fixed;z-index:1000;left:0;right:0;
     bottom:calc(env(safe-area-inset-bottom) + 12px);
     display:flex;gap:12px;overflow-x:auto;
     padding:14px calc(50vw - 125px) 8px;
@@ -186,7 +186,7 @@
 
   /* ---------- Boutons flottants ---------- */
   .fabs{
-    position:absolute;z-index:1150;right:12px;
+    position:fixed;z-index:1150;right:12px;
     bottom:calc(env(safe-area-inset-bottom) + 214px);
     display:flex;flex-direction:column;gap:10px;
   }
@@ -200,7 +200,7 @@
 
   /* ---------- À découvrir : bouton ---------- */
   .disco-btn{
-    position:absolute;z-index:1000;left:12px;
+    position:fixed;z-index:1000;left:12px;
     bottom:calc(env(safe-area-inset-bottom) + 214px);
     border:1px solid rgba(255,255,255,.45);cursor:pointer;
     background:color-mix(in srgb,var(--corail-btn) 94%,transparent);
@@ -439,7 +439,7 @@
     body .modes{left:50%;right:auto;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 8px)}
     body .modes button{min-height:34px;padding:6px 12px}
     .filters{top:calc(env(safe-area-inset-top) + 52px);left:12px;right:12px;padding:4px 8px}
-    .fabs{flex-direction:row;bottom:auto;top:calc(env(safe-area-inset-top) + 10px);right:12px;gap:8px}
+    .fabs{flex-direction:row;top:auto;bottom:calc(env(safe-area-inset-bottom) + 158px);right:12px;gap:8px}
     .fab{width:40px;height:40px}
     .disco-btn{bottom:calc(env(safe-area-inset-bottom) + 8px);top:auto;left:12px;min-height:38px;padding:8px 12px;font-size:11.5px}
     .cards{bottom:calc(env(safe-area-inset-bottom) + 8px)}
@@ -522,13 +522,15 @@
   body[data-mode="sejour"] .topbar,
   body[data-mode="sejour"] #listToggle{display:none}
   body[data-mode="spots"] #sejourUI{display:none}
-  /* Séjour (portrait) : le bouton calques ⧉ file dans le coin bas-droite,
-     juste au-dessus du « + » (plus de bouton flottant au milieu) */
-  @media (orientation:portrait){
-    body[data-mode="sejour"] .fabs{
-      right:16px;top:auto;bottom:calc(env(safe-area-inset-bottom) + 88px);
-    }
+  /* Séjour (toutes orientations) : le bouton calques ⧉ verrouillé dans le
+     coin bas-droite, juste au-dessus du « + » */
+  body[data-mode="sejour"] .fabs{
+    flex-direction:column;left:auto;right:16px;top:auto;
+    bottom:calc(env(safe-area-inset-bottom) + 88px);
   }
+  /* Séjour : zoom et crédits redescendent près du bord (pas de carrousel ici) */
+  body[data-mode="sejour"] .leaflet-bottom.leaflet-left{margin-bottom:calc(env(safe-area-inset-bottom) + 84px)}
+  body[data-mode="sejour"] .leaflet-bottom.leaflet-right{margin-bottom:calc(env(safe-area-inset-bottom) + 4px)}
   /* Écrans étroits : bascule compacte, sous-titre masqué pour éviter le chevauchement */
   @media (max-width:389px){ .modes button{padding:8px 11px} .brand .sub{display:none} }
 
@@ -536,7 +538,7 @@
   #sejourUI{position:absolute;inset:0;z-index:900;pointer-events:none}
   #sejourUI > *{pointer-events:auto}
   .sej-add{
-    position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom) + 20px);
+    position:fixed;right:12px;bottom:calc(env(safe-area-inset-bottom) + 20px);
     width:60px;height:60px;border-radius:50%;cursor:pointer;border:1px solid rgba(255,255,255,.45);
     background:color-mix(in srgb,var(--corail-btn) 94%,transparent);color:#fff;
     display:flex;align-items:center;justify-content:center;
@@ -547,7 +549,7 @@
   .sej-add[aria-expanded="true"]{transform:rotate(45deg)}
   /* Menu du + : appareil photo direct, ou pellicule — rien d'autre */
   .add-menu{
-    position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom) + 148px);
+    position:fixed;right:12px;bottom:calc(env(safe-area-inset-bottom) + 148px);
     display:flex;flex-direction:column;gap:8px;padding:8px;border-radius:20px;z-index:5;
   }
   .add-menu[hidden]{display:none}
@@ -559,14 +561,14 @@
   .add-menu button:active{background:rgba(255,255,255,.75)}
   .add-menu button span{font-size:19px}
   .sej-album{
-    position:absolute;left:12px;bottom:calc(env(safe-area-inset-bottom) + 20px);
+    position:fixed;left:12px;bottom:calc(env(safe-area-inset-bottom) + 20px);
     min-height:48px;padding:11px 16px;border-radius:999px;cursor:pointer;
     color:var(--encre);font-family:'Nunito',sans-serif;font-size:12.5px;font-weight:800;
     display:flex;align-items:center;gap:8px;
   }
   .sej-album svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .sej-storage{
-    position:absolute;left:50%;transform:translateX(-50%);
+    position:fixed;left:50%;transform:translateX(-50%);
     bottom:calc(env(safe-area-inset-bottom) + 92px);
     font-size:10.5px;font-weight:700;color:var(--encre-2);
     padding:6px 12px;border-radius:999px;white-space:nowrap;
@@ -574,7 +576,7 @@
   }
   /* État vide, centré sur la carte */
   .sej-empty{
-    position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);
+    position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);
     width:min(86vw,340px);text-align:center;border-radius:24px;padding:22px 20px;
   }
   .sej-empty h3{font-size:18px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px}
