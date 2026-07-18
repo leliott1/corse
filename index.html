@@ -1685,21 +1685,26 @@ async function apresSession(uid){
     const {data:rows}=await sb.from('members').select('pseudo,color').eq('id',uid);
     if(rows && rows.length){
       localStorage.setItem(LS.me, JSON.stringify({pseudo:rows[0].pseudo, color:rows[0].color}));
-      gate.hidden=true; return;
+      gate.hidden=true; setMode('sejour'); return;
     }
   }catch(_){}
   gate.hidden=true;
   if(!getMe()){                                     // 1re connexion de ce compte : couleur + photo
     document.getElementById('pseudoField').value=document.getElementById('loginId').value.trim()
       || localStorage.getItem(LS.ident) || '';
-    openIdent(null);
-  }
+    openIdent(()=>setMode('sejour'));
+  } else setMode('sejour');                         // connecté : on atterrit dans le séjour
 }
-(async()=>{
-  if(sb){ const {data:{session}}=await sb.auth.getSession();
+/* Vérification de session au chargement — différée d'un tour pour que tout
+   le script (dont le client Supabase) soit initialisé */
+setTimeout(async()=>{
+  if(sb){ let {data:{session}}=await sb.auth.getSession();
+    if(session && session.user.is_anonymous){        // ancien compte anonyme : place aux comptes
+      try{ await sb.auth.signOut(); }catch(_){} session=null;
+    }
     if(session){ await apresSession(session.user.id); return; } }
   gate.hidden=false; setTimeout(()=>document.getElementById('loginId').focus(),200);
-})();
+},0);
 document.getElementById('gateForm').addEventListener('submit',async e=>{
   e.preventDefault();
   const err=document.getElementById('gateErr');
